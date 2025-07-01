@@ -16,9 +16,7 @@
     "components": [
       "text",
       "image",
-      "button",
-      "custom-asset-one",
-      "quote"
+      "button"
     ]
   }
 ]
