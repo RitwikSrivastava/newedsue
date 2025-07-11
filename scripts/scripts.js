@@ -85,7 +85,6 @@ export function decorateMain(main) {
   decorateSections(main);
   decorateBlocks(main);
   decorateExternalImages(main);
-
 }
 
 /**
