@@ -270,6 +270,15 @@ async function loadCSS(href) {
   });
 }
 
+function appendQueryParams(url, params) {
+  const { searchParams } = url;
+  params.forEach((value, key) => {
+    searchParams.set(key, value);
+  });
+  url.search = searchParams.toString();
+  return url.toString();
+}
+
 function getUrlExtension(url) {
   return url.split(/[#?]/)[0].split('.').pop().trim();
 }
