@@ -270,6 +270,10 @@ async function loadCSS(href) {
   });
 }
 
+function getUrlExtension(url) {
+  return url.split(/[#?]/)[0].split('.').pop().trim();
+}
+
 /**
  * Checks if an element is an external image.
  * @param {Element} element The element
