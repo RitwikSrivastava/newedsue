@@ -6,6 +6,7 @@ import {
   decorateSections,
   decorateBlocks,
   decorateTemplateAndTheme,
+  decorateExternalImages,
   waitForFirstImage,
   loadSection,
   loadSections,
@@ -83,6 +84,8 @@ export function decorateMain(main) {
   buildAutoBlocks(main);
   decorateSections(main);
   decorateBlocks(main);
+  decorateExternalImages(main);
+
 }
 
 /**
