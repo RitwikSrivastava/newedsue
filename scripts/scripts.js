@@ -59,7 +59,7 @@ async function loadFonts() {
 }
 
 export function decorateExternalImages(main) {
-  main.querySelectorAll('a[href^="https://delivery-p"]:not([href*="/original/"]), a[href^="https://delivery-p"][href$=".gif"], a[href*="assets.ups.com"]:not([href*="/original/"])').forEach((a) => {
+  main.querySelectorAll('a[href^="https://delivery-p"]:not([href*="/original/"]), a[href*="assets.ups.com"]:not([href*="/original/"])').forEach((a) => {
     const url = new URL(a.href);
     if (url.hostname.endsWith('.adobeaemcloud.com') || url.hostname.includes('assets.ups.com')) {
       const pic = document.createElement('picture');
