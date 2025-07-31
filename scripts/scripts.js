@@ -31,6 +31,48 @@ export function moveAttributes(from, to, attributes) {
   });
 }
 
+export function decorateExternalImages(main) {
+  main.querySelectorAll('a[href^="https://delivery-p"]:not([href*="/original/"]), a[href^="https://delivery-p"][href$=".gif"], a[href*="assets.ups.com"]:not([href*="/original/"])').forEach((a) => {    
+    const url = new URL(a.href);
+    if (url.hostname.endsWith('.adobeaemcloud.com') || url.hostname.includes('assets.ups.com')) {
+      const pic = document.createElement('picture');
+
+      const source1 = document.createElement('source');
+      source1.type = 'image/webp';
+      source1.srcset = url;
+
+      const source2 = document.createElement('source');
+      source2.type = 'image/webp';
+      source2.srcset = url;
+      source2.media = '(min-width: 600px)';
+
+      const source3 = document.createElement('source');
+      source3.type = 'image/jpg';
+      source3.media = '(min-width: 600px)';
+      source3.srcset = url;
+
+      const img = document.createElement('img');
+      img.loading = 'lazy';
+      img.src = url;
+      if (a.title) {
+        img.setAttribute('alt', a.title);
+      }
+      pic.appendChild(source1);
+      pic.appendChild(source2);
+      pic.appendChild(source3);
+      pic.appendChild(img);
+      a.replaceWith(pic);
+    }
+  });
+}
+
+export function decorateImages(main) {
+  main.querySelectorAll('p img').forEach((img) => {
+    const p = img.closest('p');
+    p.className = 'img-wrapper';
+  });
+}
+
 /**
  * Move instrumentation attributes from a given element to another given element.
  * @param {Element} from the element to copy attributes from
