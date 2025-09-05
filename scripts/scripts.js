@@ -46,6 +46,7 @@ export function decorateExternalImages(main) {
       // // Process if: not containing /original/ OR is a .gif file
       // if (!containsOriginal || isGifFile) {
       const url = new URL(a.href);
+      console.log('image url', url);
       if (url.hostname.endsWith('.adobeaemcloud.com') || url.hostname.includes('assets.ups.com')) {
         const pic = document.createElement('picture');
 
