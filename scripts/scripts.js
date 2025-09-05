@@ -39,44 +39,34 @@ export function decorateExternalImages(main) {
   main.querySelectorAll('a[href]').forEach((a) => {
     // Check if it's a DM Open API URL
     if (isDMOpenAPIUrl(a.href)) {
-      // Allow .gif files even if they contain /original/
-      // const isGifFile = a.href.toLowerCase().endsWith('.gif');
-      // const containsOriginal = a.href.includes('/original/');
-
-      // // Process if: not containing /original/ OR is a .gif file
-      // if (!containsOriginal || isGifFile) {
       const url = new URL(a.href);
-      console.log('image url', url);
-      if (url.hostname.endsWith('.adobeaemcloud.com') || url.hostname.includes('assets.ups.com')) {
-        const pic = document.createElement('picture');
+      const pic = document.createElement('picture');
 
-        const source1 = document.createElement('source');
-        source1.type = 'image/webp';
-        source1.srcset = url;
+      const source1 = document.createElement('source');
+      source1.type = 'image/webp';
+      source1.srcset = url;
 
-        const source2 = document.createElement('source');
-        source2.type = 'image/webp';
-        source2.srcset = url;
-        source2.media = '(min-width: 600px)';
+      const source2 = document.createElement('source');
+      source2.type = 'image/webp';
+      source2.srcset = url;
+      source2.media = '(min-width: 600px)';
 
-        const source3 = document.createElement('source');
-        source3.type = 'image/jpg';
-        source3.media = '(min-width: 600px)';
-        source3.srcset = url;
+      const source3 = document.createElement('source');
+      source3.type = 'image/jpg';
+      source3.media = '(min-width: 600px)';
+      source3.srcset = url;
 
-        const img = document.createElement('img');
-        img.loading = 'lazy';
-        img.src = url;
-        if (a.href !== a.innerText) {
-          img.setAttribute('alt', a.innerText);
-        }
-        pic.appendChild(source1);
-        pic.appendChild(source2);
-        pic.appendChild(source3);
-        pic.appendChild(img);
-        a.replaceWith(pic);
-        // }
+      const img = document.createElement('img');
+      img.loading = 'lazy';
+      img.src = url;
+      if (a.href !== a.innerText) {
+        img.setAttribute('alt', a.innerText);
       }
+      pic.appendChild(source1);
+      pic.appendChild(source2);
+      pic.appendChild(source3);
+      pic.appendChild(img);
+      a.replaceWith(pic);
     }
   });
 }
