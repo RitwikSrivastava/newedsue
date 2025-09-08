@@ -6,6 +6,12 @@
     ]
   },
   {
+    "id":"hero",
+    "components": [
+      "image"
+    ]
+  },
+  {
     "id": "section",
     "components": [
       "text",
