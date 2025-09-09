@@ -116,9 +116,6 @@ export function decorateImagesWithWidthHeight(main) {
   const urlSpec = window.location.href.endsWith('test-page');
   if (urlSpec) {
     main.querySelectorAll('img').forEach((img) => {
-      const imgUrl = new URL(img.src);
-      imgUrl.searchParams.set('width', '750');
-      img.src = imgUrl.toString();
       img.width = '1620';
       img.height = '1080';
     });
@@ -175,7 +172,6 @@ export function decorateMain(main) {
   decorateButtons(main);
   decorateIcons(main);
   decorateExternalImages(main);
-  decorateImages(main);
   decorateImagesWithWidthHeight(main);
   buildAutoBlocks(main);
   decorateSections(main);
