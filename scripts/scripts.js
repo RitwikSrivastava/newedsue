@@ -42,35 +42,37 @@ export function decorateExternalImages(main) {
       const baseUrl = new URL(a.href);
       const pic = document.createElement('picture');
 
-      // Source 1: WebP for mobile (750px width)
-      const source1 = document.createElement('source');
-      source1.type = 'image/webp';
-      const url1 = new URL(baseUrl);
-      url1.searchParams.set('width', '750');
-      url1.searchParams.set('format', 'webply');
-      source1.srcset = url1.toString();
+      // // Source 1: WebP for mobile (750px width)
+      // const source1 = document.createElement('source');
+      // source1.type = 'image/webp';
+      // const url1 = new URL(baseUrl);
+      // url1.searchParams.set('width', '750');
+      // url1.searchParams.set('format', 'webply');
+      // source1.srcset = url1.toString();
 
-      // Source 3: JPEG for desktop (2000px width)
-      const source3 = document.createElement('source');
-      source3.type = 'image/jpeg';
-      source3.media = '(min-width: 600px)';
-      const url3 = new URL(baseUrl);
-      url3.searchParams.set('width', '2000');
-      url3.searchParams.set('format', 'jpg');
-      source3.srcset = url3.toString();
+      // // Source 3: JPEG for desktop (2000px width)
+      // const source3 = document.createElement('source');
+      // source3.type = 'image/jpeg';
+      // source3.media = '(min-width: 600px)';
+      // const url3 = new URL(baseUrl);
+      // url3.searchParams.set('width', '2000');
+      // url3.searchParams.set('format', 'jpg');
+      // source3.srcset = url3.toString();
 
-      // Source 2: WebP for desktop (2000px width)
-      const source2 = document.createElement('source');
-      source2.type = 'image/webp';
-      source2.media = '(min-width: 600px)';
-      const url2 = new URL(baseUrl);
-      url2.searchParams.set('width', '2000');
-      url2.searchParams.set('format', 'webply');
-      source2.srcset = url2.toString();
+      // // Source 2: WebP for desktop (2000px width)
+      // const source2 = document.createElement('source');
+      // source2.type = 'image/webp';
+      // source2.media = '(min-width: 600px)';
+      // const url2 = new URL(baseUrl);
+      // url2.searchParams.set('width', '2000');
+      // url2.searchParams.set('format', 'webply');
+      // source2.srcset = url2.toString();
 
       // Fallback image: JPEG for mobile (750px width)
       const img = document.createElement('img');
       img.loading = 'lazy';
+      img.width = '1620';
+      img.height = '1080'; // You can adjust this based on your aspect ratio needs
       const imgUrl = new URL(baseUrl);
       imgUrl.searchParams.set('width', '750');
       imgUrl.searchParams.set('format', 'jpg');
@@ -78,10 +80,10 @@ export function decorateExternalImages(main) {
       if (a.href !== a.innerText) {
         img.setAttribute('alt', a.innerText);
       }
-      pic.appendChild(source3);
-      pic.appendChild(source2);
+      // pic.appendChild(source3);
+      // pic.appendChild(source2);
       pic.appendChild(img);
-      pic.appendChild(source1);
+      // pic.appendChild(source1);
       a.replaceWith(pic);
     }
   });
