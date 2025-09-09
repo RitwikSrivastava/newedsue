@@ -40,6 +40,11 @@ export function decorateExternalImages(main) {
     // Check if it's a DM Open API URL
     if (isDMOpenAPIUrl(a.href)) {
       const baseUrl = new URL(a.href);
+
+      // Check if noCache parameter is set to true in window.url
+      const urlParams = new URLSearchParams(window.location.search);
+      const noCache = urlParams.get('noCache') === 'true';
+
       const pic = document.createElement('picture');
 
       // Source 1: WebP for mobile (750px width)
@@ -48,6 +53,9 @@ export function decorateExternalImages(main) {
       const url1 = new URL(baseUrl);
       url1.searchParams.set('width', '750');
       url1.searchParams.set('format', 'webply');
+      if (noCache) {
+        url1.searchParams.set('cache', 'off');
+      }
       source1.srcset = url1.toString();
 
       // Source 3: JPEG for desktop (2000px width)
@@ -57,6 +65,9 @@ export function decorateExternalImages(main) {
       const url3 = new URL(baseUrl);
       url3.searchParams.set('width', '2000');
       url3.searchParams.set('format', 'jpg');
+      if (noCache) {
+        url3.searchParams.set('cache', 'off');
+      }
       source3.srcset = url3.toString();
 
       // Source 2: WebP for desktop (2000px width)
@@ -66,6 +77,9 @@ export function decorateExternalImages(main) {
       const url2 = new URL(baseUrl);
       url2.searchParams.set('width', '2000');
       url2.searchParams.set('format', 'webply');
+      if (noCache) {
+        url2.searchParams.set('cache', 'off');
+      }
       source2.srcset = url2.toString();
 
       // Fallback image: JPEG for mobile (750px width)
@@ -76,6 +90,9 @@ export function decorateExternalImages(main) {
       const imgUrl = new URL(baseUrl);
       imgUrl.searchParams.set('width', '750');
       imgUrl.searchParams.set('format', 'jpg');
+      if (noCache) {
+        imgUrl.searchParams.set('cache', 'off');
+      }
       img.src = imgUrl.toString();
       if (a.href !== a.innerText) {
         img.setAttribute('alt', a.innerText);
