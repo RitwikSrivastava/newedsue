@@ -41,9 +41,8 @@ export function decorateExternalImages(main) {
     if (isDMOpenAPIUrl(a.href)) {
       const baseUrl = new URL(a.href);
 
-      // Check if noCache parameter is set to true in window.url
-      const urlParams = new URLSearchParams(window.location.search);
-      const noCache = urlParams.get('noCache') === 'true';
+      // Check if URL contains 'test-page-v3-nocache' to toggle cache=off
+      const noCache = window.location.href.includes('test-page-v3-nocache');
 
       const pic = document.createElement('picture');
 
