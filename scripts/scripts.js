@@ -79,8 +79,8 @@ export function decorateExternalImages(main) {
         img.setAttribute('alt', a.innerText);
       }
       pic.appendChild(source1);
-      pic.appendChild(source2);
       pic.appendChild(source3);
+      pic.appendChild(source2);
       pic.appendChild(img);
       a.replaceWith(pic);
     }
