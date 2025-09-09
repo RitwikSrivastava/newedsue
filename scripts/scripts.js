@@ -78,10 +78,10 @@ export function decorateExternalImages(main) {
       if (a.href !== a.innerText) {
         img.setAttribute('alt', a.innerText);
       }
-      pic.appendChild(source1);
       pic.appendChild(source3);
       pic.appendChild(source2);
       pic.appendChild(img);
+      pic.appendChild(source1);
       a.replaceWith(pic);
     }
   });
