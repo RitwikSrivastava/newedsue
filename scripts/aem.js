@@ -270,40 +270,40 @@ async function loadCSS(href) {
   });
 }
 
-function appendQueryParams(url, params) {
-  const { searchParams } = url;
-  params.forEach((value, key) => {
-    searchParams.set(key, value);
-  });
-  url.search = searchParams.toString();
-  return url.toString();
-}
+// function appendQueryParams(url, params) {
+//   const { searchParams } = url;
+//   params.forEach((value, key) => {
+//     searchParams.set(key, value);
+//   });
+//   url.search = searchParams.toString();
+//   return url.toString();
+// }
 
-function getUrlExtension(url) {
-  return url.split(/[#?]/)[0].split('.').pop().trim();
-}
+// function getUrlExtension(url) {
+//   return url.split(/[#?]/)[0].split('.').pop().trim();
+// }
 
-/**
- * Checks if an element is an external image.
- * @param {Element} element The element
- * @param {string} externalImageMarker The marker for external images
- * @returns {boolean} Whether the element is an external image
- * @private
- */
-// eslint-disable-next-line consistent-return
-function isExternalImage(element, externalImageMarker) {
-  // if the element is not an anchor, it's not an external image
-  if (element.tagName !== 'A') return false;
+// /**
+//  * Checks if an element is an external image.
+//  * @param {Element} element The element
+//  * @param {string} externalImageMarker The marker for external images
+//  * @returns {boolean} Whether the element is an external image
+//  * @private
+//  */
+// // eslint-disable-next-line consistent-return
+// function isExternalImage(element, externalImageMarker) {
+//   // if the element is not an anchor, it's not an external image
+//   if (element.tagName !== 'A') return false;
 
-  // if the element is an anchor with the external image marker as text content,
-  // it's an external image
-  if (element.textContent.trim() === externalImageMarker) {
-    return true;
-  }
+//   // if the element is an anchor with the external image marker as text content,
+//   // it's an external image
+//   if (element.textContent.trim() === externalImageMarker) {
+//     return true;
+//   }
 
-  const ext = getUrlExtension(element.getAttribute('href'));
-  return ext && ['jpg', 'jpeg', 'png', 'gif', 'webp'].includes(ext.toLowerCase());
-}
+//   const ext = getUrlExtension(element.getAttribute('href'));
+//   return ext && ['jpg', 'jpeg', 'png', 'gif', 'webp'].includes(ext.toLowerCase());
+// }
 
 /**
  * Loads a non module JS file.
@@ -537,33 +537,6 @@ function decorateIcons(element, prefix = '') {
   * @example
   * decorateExternalImages(main, '//External Image//');
   */
-function decorateExternalImages(ele, deliveryMarker) {
-  const extImages = ele.querySelectorAll('a');
-  extImages.forEach((extImage) => {
-    if (isExternalImage(extImage, deliveryMarker)) {
-      const extImageSrc = extImage.getAttribute('href');
-      const extPicture = createOptimizedPicture(extImageSrc);
-
-      /* copy query params from link to img */
-      const extImageUrl = new URL(extImageSrc);
-      const { searchParams } = extImageUrl;
-      extPicture.querySelectorAll('source, img').forEach((child) => {
-        if (child.tagName === 'SOURCE') {
-          const srcset = child.getAttribute('srcset');
-          if (srcset) {
-            child.setAttribute('srcset', appendQueryParams(new URL(srcset, extImageSrc), searchParams));
-          }
-        } else if (child.tagName === 'IMG') {
-          const src = child.getAttribute('src');
-          if (src) {
-            child.setAttribute('src', appendQueryParams(new URL(src, extImageSrc), searchParams));
-          }
-        }
-      });
-      extImage.parentNode.replaceChild(extPicture, extImage);
-    }
-  });
-}
 
 /**
  * Decorates all sections in a container element.
@@ -791,7 +764,7 @@ export {
   decorateIcons,
   decorateSections,
   decorateTemplateAndTheme,
-  decorateExternalImages,
+  // decorateExternalImages,
   getMetadata,
   loadBlock,
   loadCSS,
