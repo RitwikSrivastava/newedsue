@@ -112,15 +112,15 @@ export function decorateImages(main) {
   });
 }
 
-export function decorateImagesWithWidthHeight(main) {
-  const urlSpec = window.location.href.endsWith('test-page');
-  if (urlSpec) {
-    main.querySelectorAll('img').forEach((img) => {
-      img.width = '1620';
-      img.height = '1080';
-    });
-  }
-}
+// export function decorateImagesWithWidthHeight(main) {
+//   const urlSpec = window.location.href.endsWith('test-page');
+//   if (urlSpec) {
+//     main.querySelectorAll('img').forEach((img) => {
+//       img.width = '1620';
+//       img.height = '1080';
+//     });
+//   }
+// }
 
 /**
  * Move instrumentation attributes from a given element to another given element.
