@@ -232,11 +232,11 @@
         "valueType": "string"
       },
       {
-"component": "select",
-          "name": "flip",
+        "component": "select",
+          "name": "rotation",
           "value": "",
-          "label": "Flip",
-          "description": "Select the flip for the image either vertical or horizontal or vertical & horizontal",
+          "label": "Rotation",
+          "description": "Select the rotation which will rotate the image.",
           "valueType": "string",
           "options": [
             {
@@ -244,19 +244,51 @@
               "value": ""
             },
             {
-              "name": "Vertical",
-              "value": "v"
+              "name": "30",
+              "value": "30"
             },
             {
-              "name": "Horizontal",
-              "value": "h"
+              "name": "45",
+              "value": "45"
             },
             {
-              "name": "Horizontal & Vertical",
-              "value": "hv"
+              "name": "60",
+              "value": "60"
+            },
+            {
+              "name": "90",
+              "value": "90"
+            },
+            {
+              "name": "120",
+              "value": "120"
+            },
+            {
+              "name": "160",
+              "value": "160"
+            },
+            {
+              "name": "180",
+              "value": "180"
+            },
+            {
+              "name": "230",
+              "value": "230"
+            },
+            {
+              "name": "270",
+              "value": "270"
+            },
+            {
+              "name": "300",
+              "value": "300"
+            },
+            {
+              "name": "330",
+              "value": "330"
             }
           ]
-          }
+        }
     ]
   },
   {
