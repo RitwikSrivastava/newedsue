@@ -46,6 +46,21 @@ export function decorateExternalImages(main) {
 
       const pic = document.createElement('picture');
 
+      // Check if there's a rotation value in the next sibling div
+      let rotation = null;
+      const parentDiv = a.closest('div');
+      if (parentDiv && parentDiv.parentElement) {
+        const nextDiv = parentDiv.parentElement.nextElementSibling;
+        if (nextDiv) {
+          const rotationDiv = nextDiv.querySelector('div');
+          if (rotationDiv && rotationDiv.textContent.trim()) {
+            rotation = rotationDiv.textContent.trim();
+            // Remove the rotation div from markup
+            nextDiv.remove();
+          }
+        }
+      }
+
       // Source 1: WebP for mobile (750px width)
       const source1 = document.createElement('source');
       source1.type = 'image/webp';
@@ -54,6 +69,9 @@ export function decorateExternalImages(main) {
       url1.searchParams.set('format', 'webply');
       if (noCache) {
         url1.searchParams.set('cache', 'off');
+      }
+      if (rotation) {
+        url1.searchParams.set('rotate', rotation);
       }
       source1.srcset = url1.toString();
 
@@ -67,6 +85,9 @@ export function decorateExternalImages(main) {
       if (noCache) {
         url3.searchParams.set('cache', 'off');
       }
+      if (rotation) {
+        url3.searchParams.set('rotate', rotation);
+      }
       source3.srcset = url3.toString();
 
       // Source 2: WebP for desktop (2000px width)
@@ -78,6 +99,9 @@ export function decorateExternalImages(main) {
       url2.searchParams.set('format', 'webply');
       if (noCache) {
         url2.searchParams.set('cache', 'off');
+      }
+      if (rotation) {
+        url2.searchParams.set('rotate', rotation);
       }
       source2.srcset = url2.toString();
 
@@ -92,10 +116,14 @@ export function decorateExternalImages(main) {
       if (noCache) {
         imgUrl.searchParams.set('cache', 'off');
       }
+      if (rotation) {
+        imgUrl.searchParams.set('rotate', rotation);
+      }
       img.src = imgUrl.toString();
       if (a.href !== a.innerText) {
         img.setAttribute('alt', a.innerText);
       }
+
       pic.appendChild(source3);
       pic.appendChild(source2);
       pic.appendChild(img);
