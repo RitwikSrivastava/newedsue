@@ -41,6 +41,12 @@ export function decorateExternalImages(main) {
     if (isDMOpenAPIUrl(a.href)) {
       const baseUrl = new URL(a.href);
 
+      // Remove /renditions/original from the path to support rotate parameter
+      // DM OpenAPI rotate only works with proper URL format (without /renditions/original)
+      if (baseUrl.pathname.includes('/renditions/original')) {
+        baseUrl.pathname = baseUrl.pathname.replace('/renditions/original', '');
+      }
+
       // Check if URL contains 'test-page-v3-nocache' to toggle cache=off
       const noCache = window.location.href.includes('test-page-v3-nocache');
 
