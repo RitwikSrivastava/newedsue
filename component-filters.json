@@ -17,7 +17,10 @@
       "columns",
       "fragment",
       "custom-asset-one",
-      "quote"
+      "quote",
+      "icon-and-text-container",
+      "image-and-text-container",
+      "link-list"
     ]
   },
   {
@@ -40,6 +43,24 @@
       "button",
       "title",
       "custom-asset-one"
+    ]
+  },
+  {
+    "id": "icon-and-text-container",
+    "components": [
+      "icon-and-text"
+    ]
+  },
+  {
+    "id": "image-and-text-container",
+    "components": [
+      "image-and-text"
+    ]
+  },
+  {
+    "id": "link-list",
+    "components": [
+      "link"
     ]
   }
 ]

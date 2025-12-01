@@ -220,6 +220,150 @@
     ]
   },
   {
+    "id": "icon-and-text-container",
+    "fields": [
+      {
+        "component": "text",
+        "name": "classes",
+        "label": "Layout",
+        "valueType": "string"
+      }
+    ]
+  },
+  {
+    "id": "icon-and-text",
+    "fields": [
+      {
+        "component": "custom-asset-namespace:custom-asset",
+        "name": "icon",
+        "label": "Icon",
+        "configUrl": "/content/dam/Gazal-ue-site/config.json",
+        "valueType": "string"
+      },
+      {
+        "component": "custom-asset-namespace:custom-asset-mimetype",
+        "valueType": "string",
+        "name": "iconMimeType"
+      },
+      {
+        "component": "text",
+        "name": "iconAlt",
+        "label": "Icon Alt Text",
+        "valueType": "string"
+      },
+      {
+        "component": "text",
+        "name": "heading",
+        "label": "Heading",
+        "valueType": "string"
+      },
+      {
+        "component": "richtext",
+        "name": "text",
+        "label": "Text",
+        "valueType": "string"
+      }
+    ]
+  },
+  {
+    "id": "image-and-text-container",
+    "fields": [
+      {
+        "component": "text",
+        "name": "columns",
+        "label": "Layout",
+        "valueType": "string"
+      },
+      {
+        "component": "text",
+        "name": "imageAlignment",
+        "label": "Alignment",
+        "valueType": "string"
+      }
+    ]
+  },
+  {
+    "id": "image-and-text",
+    "fields": [
+      {
+        "component": "custom-asset-namespace:custom-asset",
+        "name": "image",
+        "label": "Image",
+        "configUrl": "/content/dam/Gazal-ue-site/config.json",
+        "valueType": "string"
+      },
+      {
+        "component": "custom-asset-namespace:custom-asset-mimetype",
+        "valueType": "string",
+        "name": "imageMimeType"
+      },
+      {
+        "component": "text",
+        "name": "imageAlt",
+        "label": "Image Alt Text",
+        "valueType": "string"
+      },
+      {
+        "component": "text",
+        "name": "heading",
+        "label": "Heading",
+        "valueType": "string"
+      },
+      {
+        "component": "richtext",
+        "name": "text",
+        "label": "Text",
+        "valueType": "string"
+      },
+      {
+        "component": "text",
+        "name": "linkText",
+        "label": "Link Text",
+        "valueType": "string"
+      },
+      {
+        "component": "text",
+        "name": "linkUrl",
+        "label": "Link URL",
+        "valueType": "string"
+      }
+    ]
+  },
+  {
+    "id": "link-list",
+    "fields": [
+      {
+        "component": "text",
+        "name": "heading",
+        "label": "Heading",
+        "valueType": "string"
+      },
+      {
+        "component": "text",
+        "name": "classes",
+        "label": "Style",
+        "valueType": "string"
+      }
+    ]
+  },
+  {
+    "id": "link",
+    "fields": [
+      {
+        "component": "text",
+        "name": "linkText",
+        "label": "Link Text",
+        "valueType": "string"
+      },
+      {
+        "component": "text",
+        "name": "linkUrl",
+        "label": "Link URL",
+        "valueType": "string"
+      }
+    ]
+  },
+  {
     "id": "custom-asset-one",
     "fields": [
       {

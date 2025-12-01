@@ -158,6 +158,99 @@
           }
         },
         {
+          "title": "Icon and Text Container",
+          "id": "icon-and-text-container",
+          "plugins": {
+            "xwalk": {
+              "page": {
+                "resourceType": "core/franklin/components/block/v1/block",
+                "template": {
+                  "name": "Icon and Text Container",
+                  "model": "icon-and-text-container",
+                  "filter": "icon-and-text-container"
+                }
+              }
+            }
+          }
+        },
+        {
+          "title": "Icon and Text",
+          "id": "icon-and-text",
+          "plugins": {
+            "xwalk": {
+              "page": {
+                "resourceType": "core/franklin/components/block/v1/block/item",
+                "template": {
+                  "name": "Icon and Text",
+                  "model": "icon-and-text"
+                }
+              }
+            }
+          }
+        },
+        {
+          "title": "Image and Text Container",
+          "id": "image-and-text-container",
+          "plugins": {
+            "xwalk": {
+              "page": {
+                "resourceType": "core/franklin/components/block/v1/block",
+                "template": {
+                  "name": "Image and Text Container",
+                  "model": "image-and-text-container",
+                  "filter": "image-and-text-container"
+                }
+              }
+            }
+          }
+        },
+        {
+          "title": "Image and Text",
+          "id": "image-and-text",
+          "plugins": {
+            "xwalk": {
+              "page": {
+                "resourceType": "core/franklin/components/block/v1/block/item",
+                "template": {
+                  "name": "Image and Text",
+                  "model": "image-and-text"
+                }
+              }
+            }
+          }
+        },
+        {
+          "title": "Link List",
+          "id": "link-list",
+          "plugins": {
+            "xwalk": {
+              "page": {
+                "resourceType": "core/franklin/components/block/v1/block",
+                "template": {
+                  "name": "Link List",
+                  "model": "link-list",
+                  "filter": "link-list"
+                }
+              }
+            }
+          }
+        },
+        {
+          "title": "Link",
+          "id": "link",
+          "plugins": {
+            "xwalk": {
+              "page": {
+                "resourceType": "core/franklin/components/block/v1/block/item",
+                "template": {
+                  "name": "Link",
+                  "model": "link"
+                }
+              }
+            }
+          }
+        },
+        {
           "title": "Custom Image One",
           "id": "custom-asset-one",
           "plugins": {
