@@ -193,6 +193,24 @@
     "id": "hero",
     "fields": [
       {
+        "component": "custom-asset-namespace:custom-asset",
+        "name": "image",
+        "label": "Image",
+        "configUrl": "/content/dam/Gazal-ue-site/config.json",
+        "valueType": "string"
+      },
+      {
+        "component": "custom-asset-namespace:custom-asset-mimetype",
+        "valueType": "string",
+        "name": "imageMimeType"
+      },
+      {
+        "component": "text",
+        "name": "imageAlt",
+        "label": "Alt Text",
+        "valueType": "string"
+      },
+      {
         "component": "text",
         "name": "title",
         "label": "Title"
@@ -227,24 +245,6 @@
             "value": "h6"
           }
         ]
-      },
-      {
-        "component": "custom-asset-namespace:custom-asset",
-        "name": "image",
-        "label": "Image",
-        "configUrl": "/content/dam/Gazal-ue-site/config.json",
-        "valueType": "string"
-      },
-      {
-        "component": "custom-asset-namespace:custom-asset-mimetype",
-        "valueType": "string",
-        "name": "imageMimeType"
-      },
-      {
-        "component": "text",
-        "name": "imageAlt",
-        "label": "Alt Text",
-        "valueType": "string"
       },
       {
         "component": "richtext",
