@@ -193,18 +193,22 @@
     "id": "hero",
     "fields": [
       {
-        "component": "reference",
-        "valueType": "string",
+        "component": "custom-asset-namespace:custom-asset",
         "name": "image",
         "label": "Image",
-        "multi": false
+        "configUrl": "/content/dam/Gazal-ue-site/config.json",
+        "valueType": "string"
+      },
+      {
+        "component": "custom-asset-namespace:custom-asset-mimetype",
+        "valueType": "string",
+        "name": "imageMimeType"
       },
       {
         "component": "text",
-        "valueType": "string",
-        "name": "imageAlt",
-        "label": "Alt",
-        "value": ""
+        "name": "imageTitle",
+        "label": "Alt Text",
+        "valueType": "string"
       },
       {
         "component": "richtext",
