@@ -280,6 +280,52 @@
     ]
   },
   {
+    "id": "icon-and-text-container",
+    "fields": [
+      {
+        "component": "text",
+        "name": "classes",
+        "label": "Layout (e.g., layout-1-col)",
+        "valueType": "string"
+      },
+      {
+        "component": "text",
+        "name": "alignment",
+        "label": "Alignment (e.g., left-aligned)",
+        "valueType": "string"
+      }
+    ]
+  },
+  {
+    "id": "icon-and-text",
+    "fields": [
+      {
+        "component": "reference",
+        "name": "image",
+        "label": "Icon Image (optional)",
+        "valueType": "string"
+      },
+      {
+        "component": "text",
+        "name": "imageAlt",
+        "label": "Alt Text",
+        "valueType": "string"
+      },
+      {
+        "component": "text",
+        "name": "hideAltText",
+        "label": "Hide Alt Text (true/false)",
+        "valueType": "string"
+      },
+      {
+        "component": "richtext",
+        "name": "content",
+        "label": "Content (H2 + paragraphs + links)",
+        "valueType": "string"
+      }
+    ]
+  },
+  {
     "id": "image-and-text-container",
     "fields": [
       {
