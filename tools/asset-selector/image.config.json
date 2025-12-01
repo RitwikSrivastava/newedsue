@@ -10,9 +10,7 @@
     "expiryOptions": {
         "allowSelectionAndDrag": false
     },
-    "assetDomainMapping": {
-        "delivery-p66302-e574366.adobeaemcloud.com": "https://dynamicmedia-openapi.scene7.com/"
-    },
+    "assetDomainMapping": {"delivery-p66302-e574366.adobeaemcloud.com": "https://dynamicmedia-openapi.scene7.com/"},
     "filterSchema": [
         {
           "fields": [

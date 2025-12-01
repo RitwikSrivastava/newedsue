@@ -13,6 +13,99 @@ import {
 } from './aem.js';
 
 /**
+ * Gets path details from the current URL
+ * @returns {object} Object containing path details
+ */
+export function getPathDetails() {
+  const { pathname } = window.location;
+  const extParts = pathname.split('.');
+  const ext = extParts.length > 1 ? extParts[extParts.length - 1] : '';
+  const isContentPath = pathname.startsWith('/content');
+  const parts = pathname.split('/').filter(Boolean);
+
+  const safeLangGet = (index) => {
+    const val = parts[index];
+    return val ? val.split('.')[0].toLowerCase() : '';
+  };
+
+  let langRegion = 'en-au';
+
+  if (window.hlx && window.hlx.isExternalSite === true) {
+    const hlxLangRegion = window.hlx.langregion?.toLowerCase();
+    if (hlxLangRegion) {
+      langRegion = hlxLangRegion;
+    } else if (parts.length >= 2) {
+      const ISO_2_LETTER = /^[a-z]{2}$/;
+      const region = isContentPath ? safeLangGet(2) : safeLangGet(0);
+      let language = isContentPath ? safeLangGet(3) : safeLangGet(1);
+      [language] = language.split('_');
+      if (ISO_2_LETTER.test(language) && ISO_2_LETTER.test(region)) {
+        langRegion = `${language}-${region}`;
+      }
+    }
+  } else {
+    langRegion = isContentPath ? safeLangGet(2) : safeLangGet(0);
+  }
+
+  let [lang, region] = langRegion.split('-');
+  const isLanguageMasters = langRegion === 'language-masters';
+
+  if (region === 'masters') region = 'au';
+  if (lang === 'language') lang = 'en';
+  if (isLanguageMasters) langRegion = 'en-au';
+
+  const prefix = pathname.substring(0, pathname.indexOf(`/${langRegion}`)) || '';
+  const suffix = pathname.substring(pathname.indexOf(`/${langRegion}`) + langRegion.length + 1) || '';
+
+  return {
+    ext,
+    prefix,
+    suffix,
+    langRegion,
+    lang,
+    region,
+    isContentPath,
+    isLanguageMasters,
+  };
+}
+
+/**
+ * Fetches language placeholders
+ * @param {string} langRegion - Language region code
+ * @returns {object} Placeholders object
+ */
+export async function fetchLanguagePlaceholders(langRegion) {
+  const langCode = langRegion || getPathDetails()?.langRegion || 'en-au';
+  try {
+    const resp = await fetch(`/${langCode}/placeholders.json`);
+    if (resp.ok) {
+      const json = await resp.json();
+      return json.data?.reduce((acc, item) => {
+        acc[item.key] = item.value;
+        return acc;
+      }, {}) || {};
+    }
+  } catch (error) {
+    // eslint-disable-next-line no-console
+    console.error(`Error fetching placeholders for lang: ${langCode}`, error);
+    try {
+      const resp = await fetch('/en-au/placeholders.json');
+      if (resp.ok) {
+        const json = await resp.json();
+        return json.data?.reduce((acc, item) => {
+          acc[item.key] = item.value;
+          return acc;
+        }, {}) || {};
+      }
+    } catch (err) {
+      // eslint-disable-next-line no-console
+      console.error('Error fetching placeholders:', err);
+    }
+  }
+  return {};
+}
+
+/**
  * Moves all the attributes from a given elmenet to another given element.
  * @param {Element} from the element to copy attributes from
  * @param {Element} to the element to copy attributes to
