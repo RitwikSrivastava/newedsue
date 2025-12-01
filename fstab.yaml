@@ -1,5 +1,5 @@
 mountpoints:
   /:
-    url: "https://author-p66302-e574366.adobeaemcloud.com/bin/franklin.delivery/gazal2708/edsue/main"
+    url: "https://author-p66302-e574366.adobeaemcloud.com/bin/franklin.delivery/gazal2708/edsue/quantas"
     type: "markup"
     suffix: ".html"
