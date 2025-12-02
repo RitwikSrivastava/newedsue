@@ -92,10 +92,14 @@ function decorateItem(parentBlock, block, classes = [], placeholder = {}) {
     }
     iconContainer.appendChild(imgEl);
   } else if (iconText) {
-    // If there's text, create a span with icon classes
-    const iconSpan = document.createElement('span');
-    iconSpan.className = `icon ${iconText}`;
-    iconContainer.appendChild(iconSpan);
+    // If it's text, create an img element pointing to the SVG file
+    const iconImg = document.createElement('img');
+    // Remove 'icon-' prefix if present and use as filename
+    const iconName = iconText.replace(/^icon-/, '');
+    iconImg.src = `/icons/${iconName}.svg`;
+    iconImg.alt = '';
+    iconImg.loading = 'lazy';
+    iconContainer.appendChild(iconImg);
   }
 
   // Wrapper for content, and links
