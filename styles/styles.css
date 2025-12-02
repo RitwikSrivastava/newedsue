@@ -10,6 +10,9 @@
  * governing permissions and limitations under the License.
  */
 
+/* Import design tokens */
+@import url('tokens.css');
+
 :root {
   /* colors */
   --background-color: white;
