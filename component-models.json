@@ -425,16 +425,46 @@
     "id": "link-list",
     "fields": [
       {
-        "component": "text",
+        "component": "richtext",
         "name": "heading",
         "label": "Heading",
-        "valueType": "string"
+        "valueType": "string",
+        "value": "<h2>Related pages</h2>"
       },
       {
         "component": "text",
-        "name": "classes",
-        "label": "Style",
-        "valueType": "string"
+        "name": "buildListType",
+        "label": "Build List Type (fixedList or childPages)",
+        "valueType": "string",
+        "value": "fixedList"
+      },
+      {
+        "component": "text",
+        "name": "childPagesParentPage",
+        "label": "Child Pages Parent Page (leave empty for fixedList)",
+        "valueType": "string",
+        "value": ""
+      },
+      {
+        "component": "text",
+        "name": "orderBy",
+        "label": "Order By (jcr:title or other)",
+        "valueType": "string",
+        "value": "jcr:title"
+      },
+      {
+        "component": "text",
+        "name": "sortOrder",
+        "label": "Sort Order (ascending or descending)",
+        "valueType": "string",
+        "value": "ascending"
+      },
+      {
+        "component": "text",
+        "name": "excludeUrl",
+        "label": "Exclude URLs (comma-separated)",
+        "valueType": "string",
+        "value": ""
       }
     ]
   },
