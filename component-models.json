@@ -472,16 +472,11 @@
     "id": "link",
     "fields": [
       {
-        "component": "text",
-        "name": "linkText",
-        "label": "Link Text",
-        "valueType": "string"
-      },
-      {
-        "component": "text",
-        "name": "linkUrl",
-        "label": "Link URL",
-        "valueType": "string"
+        "component": "richtext",
+        "name": "link",
+        "label": "Link (use link button in editor to create)",
+        "valueType": "string",
+        "value": "<a href=\"https://www.qantas.com\">Link text</a>"
       }
     ]
   },
