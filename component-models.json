@@ -579,5 +579,90 @@
          "value": ""
        }
      ]
-  }  
+  },
+  {
+    "id": "logo",
+    "fields": [
+      {
+        "component": "reference",
+        "name": "image",
+        "label": "Logo Image",
+        "valueType": "string"
+      },
+      {
+        "component": "text",
+        "name": "imageAlt",
+        "label": "Alt Text",
+        "valueType": "string"
+      },
+      {
+        "component": "aem-content",
+        "name": "link",
+        "label": "Link URL",
+        "valueType": "string"
+      }
+    ]
+  },
+  {
+    "id": "menu",
+    "fields": [
+      {
+        "component": "text",
+        "name": "heading",
+        "label": "Menu Heading",
+        "valueType": "string"
+      }
+    ]
+  },
+  {
+    "id": "menu-item",
+    "fields": [
+      {
+        "component": "aem-content",
+        "name": "link",
+        "label": "Link URL",
+        "valueType": "string"
+      },
+      {
+        "component": "text",
+        "name": "linkText",
+        "label": "Link Text",
+        "valueType": "string"
+      }
+    ]
+  },
+  {
+    "id": "region-selector",
+    "fields": [
+      {
+        "component": "text",
+        "name": "placeholder",
+        "label": "Placeholder Text",
+        "valueType": "string",
+        "value": "Region Selector"
+      }
+    ]
+  },
+  {
+    "id": "login",
+    "fields": [
+      {
+        "component": "text",
+        "name": "loginUrl",
+        "label": "Login URL",
+        "valueType": "string"
+      }
+    ]
+  },
+  {
+    "id": "shopping-cart-widget",
+    "fields": [
+      {
+        "component": "text",
+        "name": "cartUrl",
+        "label": "Shopping Cart URL",
+        "valueType": "string"
+      }
+    ]
+  }
 ]
