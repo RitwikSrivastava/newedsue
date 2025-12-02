@@ -18,11 +18,15 @@ import buildBackToTopLink from '../../scripts/components/build-back-to-top.js';
  */
 
 export default async function decorate(block) {
-  let footerPath = `/${getPathDetails().langRegion}/fragments/footer`;
-
-  if (isAuthorMode() && footerPath.startsWith('/language-masters')) {
-    footerPath = `/${getPathDetails().langRegion}/en/fragments/footer`;
-  }
+  // Simplified path - just use /footer directly
+  let footerPath = '/footer';
+  
+  // For production sites with language folders, use:
+  // let footerPath = `/${getPathDetails().langRegion}/fragments/footer`;
+  // if (isAuthorMode() && footerPath.startsWith('/language-masters')) {
+  //   footerPath = `/${getPathDetails().langRegion}/en/fragments/footer`;
+  // }
+  
   const fragment = await loadFragment(footerPath);
 
   block.textContent = '';

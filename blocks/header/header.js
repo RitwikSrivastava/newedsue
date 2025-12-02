@@ -653,11 +653,15 @@ function attachTestIdToElements(block) {
 export default async function decorate(block) {
   headerBlock = block;
 
-  let navPath = `/${getPathDetails().langRegion}/fragments/nav`;
-
-  if (isAuthorMode() && navPath.startsWith('/language-masters')) {
-    navPath = `/${getPathDetails().langRegion}/en/fragments/nav`;
-  }
+  // Simplified path - just use /nav directly
+  let navPath = '/nav';
+  
+  // For production sites with language folders, use:
+  // let navPath = `/${getPathDetails().langRegion}/fragments/nav`;
+  // if (isAuthorMode() && navPath.startsWith('/language-masters')) {
+  //   navPath = `/${getPathDetails().langRegion}/en/fragments/nav`;
+  // }
+  
   const fragment = await loadFragment(navPath);
 
   placeholder = await fetchLanguagePlaceholders();
