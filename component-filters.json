@@ -20,7 +20,12 @@
       "quote",
       "icon-and-text-container",
       "image-and-text-container",
-      "link-list"
+      "link-list",
+      "logo",
+      "menu",
+      "region-selector",
+      "login",
+      "shopping-cart-widget"
     ]
   },
   {
@@ -61,6 +66,12 @@
     "id": "link-list",
     "components": [
       "link"
+    ]
+  },
+  {
+    "id": "menu",
+    "components": [
+      "menu-item"
     ]
   }
 ]
