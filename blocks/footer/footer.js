@@ -109,6 +109,12 @@ export default async function decorate(block) {
   );
   footerAckWrapper?.classList.add('caption');
 
+  // Add 'icon' class to menu block in footer-social section
+  const footerSocialMenu = footer?.querySelector('.footer-social .menu');
+  if (footerSocialMenu) {
+    footerSocialMenu.classList.add('icon');
+  }
+
   // Process social elements
   const footerSocialElements = footer?.querySelectorAll('.footer-social li');
   footerSocialElements?.forEach((li) => {
