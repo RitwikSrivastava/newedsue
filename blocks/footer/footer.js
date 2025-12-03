@@ -115,6 +115,12 @@ export default async function decorate(block) {
     footerSocialMenu.classList.add('icon');
   }
 
+  // Add 'horizontal' class to menu block in footer-links section
+  const footerLinksMenu = footer?.querySelector('.footer-links .menu');
+  if (footerLinksMenu) {
+    footerLinksMenu.classList.add('horizontal');
+  }
+
   // Process social elements
   const footerSocialElements = footer?.querySelectorAll('.footer-social li');
   footerSocialElements?.forEach((li) => {
