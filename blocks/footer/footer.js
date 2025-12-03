@@ -1,7 +1,6 @@
 import { loadFragment } from '../fragment/fragment.js';
 import { createElementWithClasses, getTextContent } from '../../scripts/utils/dom.js';
-import { addClassToSelectors, isAuthorMode } from '../../scripts/utils/common-utils.js';
-import { getPathDetails } from '../../scripts/scripts.js';
+import { addClassToSelectors } from '../../scripts/utils/common-utils.js';
 import {
   EVENT_NAME,
   LINK_TYPE,
@@ -19,14 +18,14 @@ import buildBackToTopLink from '../../scripts/components/build-back-to-top.js';
 
 export default async function decorate(block) {
   // Simplified path - just use /footer directly
-  let footerPath = '/footer';
-  
+  const footerPath = '/footer';
+
   // For production sites with language folders, use:
   // let footerPath = `/${getPathDetails().langRegion}/fragments/footer`;
   // if (isAuthorMode() && footerPath.startsWith('/language-masters')) {
   //   footerPath = `/${getPathDetails().langRegion}/en/fragments/footer`;
   // }
-  
+
   const fragment = await loadFragment(footerPath);
 
   block.textContent = '';
@@ -56,12 +55,39 @@ export default async function decorate(block) {
   });
 
   // Handle back to top functionality
-  const footerBackToTop = footer.querySelector('[data-show-back-to-link="true"]');
-  if (footerBackToTop) {
-    const backToTopLink = await buildBackToTopLink();
-    if (backToTopLink) {
-      footerBackToTop.appendChild(backToTopLink);
+  // First try DA-style metadata approach
+  let footerBackToTop = footer.querySelector('[data-show-back-to-link="true"]');
+
+  // If not found, try UE approach: detect by content
+  if (!footerBackToTop) {
+    const firstSection = footer.querySelector('.footer-backtotop');
+    if (firstSection) {
+      const textContent = getTextContent(firstSection).toLowerCase().trim();
+      // Check if this section contains "back to top" text
+      if (textContent.includes('back to top') || textContent.includes('backtotop')) {
+        footerBackToTop = firstSection;
+      }
     }
+  }
+
+  if (footerBackToTop) {
+    let backToTopLink = await buildBackToTopLink();
+
+    // Fallback: if buildBackToTopLink fails (no placeholders), create a simple link
+    if (!backToTopLink) {
+      backToTopLink = createElementWithClasses('a', 'back-to-top-link', 'body-02');
+      backToTopLink.href = '#main-content';
+      backToTopLink.textContent = 'Back to top';
+      backToTopLink.setAttribute('data-wae-event', EVENT_NAME.BACK_TO_TOP_CLICK);
+      backToTopLink.addEventListener('click', (e) => {
+        e.preventDefault();
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      });
+    }
+
+    // Clear existing content and add the generated link
+    footerBackToTop.textContent = '';
+    footerBackToTop.appendChild(backToTopLink);
   }
 
   // create a variable for acknowledgement and move acknowledgement section out of footer
@@ -99,15 +125,13 @@ export default async function decorate(block) {
       anchor.setAttribute('data-wae-module', MENU_TYPE.FOOTER);
       anchor.removeAttribute('data-wae-menu-type');
       anchor.removeAttribute('data-wae-menu-level');
-      anchor.addEventListener('click', () =>
-        triggerLinkClickEvent(
-          linkText,
-          anchor.href,
-          LINK_TYPE.EXTERNAL,
-          MENU_TYPE.FOOTER,
-          '',
-        ),
-      );
+      anchor.addEventListener('click', () => triggerLinkClickEvent(
+        linkText,
+        anchor.href,
+        LINK_TYPE.EXTERNAL,
+        MENU_TYPE.FOOTER,
+        '',
+      ));
 
       img.removeAttribute('aria-hidden');
       span.remove();
@@ -124,14 +148,12 @@ export default async function decorate(block) {
       anchor.setAttribute('data-wae-event', EVENT_NAME.MENU_CLICK);
       anchor.setAttribute('data-wae-menu-type', MENU_TYPE.FOOTER);
       anchor.setAttribute('data-wae-menu-level', '1');
-      anchor.addEventListener('click', () =>
-        triggerMenuClickEvent(
-          anchor?.href,
-          anchor?.querySelector('span')?.textContent,
-          anchor?.getAttribute('data-wae-menu-type'),
-          anchor?.getAttribute('data-wae-menu-level'),
-        ),
-      );
+      anchor.addEventListener('click', () => triggerMenuClickEvent(
+        anchor?.href,
+        anchor?.querySelector('span')?.textContent,
+        anchor?.getAttribute('data-wae-menu-type'),
+        anchor?.getAttribute('data-wae-menu-level'),
+      ));
     }
   });
 
@@ -139,9 +161,7 @@ export default async function decorate(block) {
   const brandLink = footer?.querySelector('.footer-brand a');
   if (brandLink) {
     brandLink.setAttribute('data-wae-event', EVENT_NAME.RETURN_HOME_CLICK);
-    brandLink.addEventListener('click', () =>
-      triggerReturnHomeClickEvent(brandLink.href),
-    );
+    brandLink.addEventListener('click', () => triggerReturnHomeClickEvent(brandLink.href));
   }
 
   const footerNavigation = block.querySelector('.footer-navigation');
