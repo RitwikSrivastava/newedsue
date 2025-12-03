@@ -31,7 +31,18 @@ const decorate = (block) => {
     const pathDetails = getPathDetails();
     console.log('Region selector: Path details', pathDetails);
     
-    const { lang, region, langRegion } = pathDetails;
+    let { lang, region, langRegion } = pathDetails;
+    
+    // Fallback to 'en-au' if empty
+    if (!langRegion || langRegion === '') {
+      langRegion = 'en-au';
+      lang = 'en';
+      region = 'au';
+    }
+    
+    // Additional safety check
+    if (!lang || lang === '') lang = 'en';
+    if (!region || region === '') region = 'au';
 
     const regionSelectorFlag =
       window.eds_config?.regional_selector?.flags[langRegion] || 'runway_country_flag_australia';
