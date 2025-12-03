@@ -656,5 +656,17 @@
   {
     "id": "shopping-cart-widget",
     "fields": []
+  },
+  {
+    "id": "help",
+    "fields": [
+      {
+        "component": "text",
+        "name": "helpUrl",
+        "label": "Help Page URL",
+        "valueType": "string",
+        "value": "https://help.qantas.com/support/s/"
+      }
+    ]
   }
 ]
