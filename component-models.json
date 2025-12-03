@@ -624,15 +624,21 @@
     "id": "menu-item",
     "fields": [
       {
-        "component": "aem-content",
-        "name": "link",
-        "label": "Link URL",
+        "component": "text",
+        "name": "title",
+        "label": "Link Text",
         "valueType": "string"
       },
       {
-        "component": "text",
-        "name": "linkText",
-        "label": "Link Text",
+        "component": "richtext",
+        "name": "link",
+        "label": "Link (use link button to add URL)",
+        "valueType": "string"
+      },
+      {
+        "component": "reference",
+        "name": "icon",
+        "label": "Icon (optional)",
         "valueType": "string"
       }
     ]

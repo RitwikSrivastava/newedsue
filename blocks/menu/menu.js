@@ -110,12 +110,23 @@ export default function decorate(block) {
       moveInstrumentation(div, li);
 
       const [titleEl, linkEl, iconEl] = [...div.children];
-      const title = titleEl?.textContent.trim() || '';
+      
+      // Unwrap content from Universal Editor's nested divs/p tags
+      const unwrap = (el) => {
+        const child = el?.firstElementChild;
+        return child?.tagName === 'DIV' || child?.tagName === 'P' ? child : el;
+      };
+      
+      const unwrappedTitleEl = unwrap(titleEl);
+      const unwrappedLinkEl = unwrap(linkEl);
+      const unwrappedIconEl = iconEl ? unwrap(iconEl) : null;
+      
+      const title = unwrappedTitleEl?.textContent.trim() || '';
 
       const spanElement = document.createElement('span');
       spanElement.textContent = title;
 
-      const linkElement = linkEl.querySelector('a') ?? document.createElement('a');
+      const linkElement = unwrappedLinkEl?.querySelector('a') ?? document.createElement('a');
       linkElement.classList.add('menu-link', 'body-02');
       linkElement.removeAttribute('title');
 
@@ -126,14 +137,14 @@ export default function decorate(block) {
       linkElement.textContent = '';
       linkElement.append(spanElement);
 
-      const iconHref = iconEl?.querySelector('img')?.src;
+      const iconHref = unwrappedIconEl?.querySelector('img')?.src;
       const fileName = iconHref?.split('/').pop();
 
       if (iconHref) {
         // Get filename from icon path
         const newIconElement = document.createElement('img');
         newIconElement.src = `${window.hlx.codeBasePath}/icons/${fileName}`;
-        newIconElement.alt = '';
+        newIconElement.alt = title;
         linkElement.prepend(newIconElement);
       }
       linkElement.classList.remove('button');
