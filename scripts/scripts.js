@@ -379,4 +379,29 @@ async function loadPage() {
   loadDelayed();
 }
 
+// Initialize eds_config for widgets
+if (!window.eds_config) {
+  window.eds_config = {
+    widgets: {
+      env: 'production',
+      login: {
+        oauthInitBundleUri: 'https://cdn.sit.qantasloyalty.com/appcache/qfa-qff-oauth-login/master/0.0.0/oauth.js',
+        oauthBundleUri: 'https://cdn.sit.qantasloyalty.com/appcache/qdd-oauth-login/master/0.0.0/bundle.js',
+        oauthLoginRibbonBundleUri: 'https://cdn.sit.qantasloyalty.com/appcache/qdd-login-ribbon/master/0.0.0/bundle.js'
+      },
+      shopping_cart: {
+        scriptPath: 'https://static.qcom-stg.qantastesting.com/ams02/a974/62/dev/eds-master/shoppingcart_widget/current/app.js'
+      }
+    },
+    regional_selector: {
+      flags: {
+        'en-au': 'runway_country_flag_australia',
+        'en-us': 'runway_country_flag_united_states',
+        'en-gb': 'runway_country_flag_united_kingdom',
+        'en-nz': 'runway_country_flag_new_zealand'
+      }
+    }
+  };
+}
+
 loadPage();

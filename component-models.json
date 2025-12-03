@@ -641,11 +641,11 @@
     "id": "region-selector",
     "fields": [
       {
-        "component": "aem-content",
+        "component": "richtext",
         "name": "link",
         "label": "Region Selection Page Link",
         "valueType": "string",
-        "value": "/en-au/region-selection"
+        "value": "<a href=\"/en-au/region-selection\">Region Selector</a>"
       }
     ]
   },
