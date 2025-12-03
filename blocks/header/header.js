@@ -420,8 +420,12 @@ function decorateNavigationBar(mainNavSections, supportingSection) {
     const firstSubMenuBlock = submenus?.[0]?.firstElementChild;
     if (firstSubMenuBlock) {
       firstSubMenuBlock.classList.add(expandedClass);
-      // Add 'shortcuts' class to first menu for icon display
-      firstSubMenuBlock.classList.add('shortcuts');
+
+      // Add 'shortcuts' class only if the menu heading is "Shortcuts"
+      const menuHeading = firstSubMenuBlock.querySelector('.menu-heading')?.textContent.trim();
+      if (menuHeading === 'Shortcuts') {
+        firstSubMenuBlock.classList.add('shortcuts');
+      }
 
       const accordionButton = firstSubMenuBlock.querySelector(
         `.${mobileAccordionToggleClass}`,
