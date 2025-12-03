@@ -418,12 +418,17 @@ function decorateNavigationBar(mainNavSections, supportingSection) {
       anchor?.getAttribute('data-wae-menu-level'),
     )));
     const firstSubMenuBlock = submenus?.[0]?.firstElementChild;
-    firstSubMenuBlock.classList.add(expandedClass);
-    const accordionButton = firstSubMenuBlock.querySelector(
-      `.${mobileAccordionToggleClass}`,
-    );
-    if (accordionButton) {
-      accordionButton.ariaExpanded = true;
+    if (firstSubMenuBlock) {
+      firstSubMenuBlock.classList.add(expandedClass);
+      // Add 'shortcuts' class to first menu for icon display
+      firstSubMenuBlock.classList.add('shortcuts');
+
+      const accordionButton = firstSubMenuBlock.querySelector(
+        `.${mobileAccordionToggleClass}`,
+      );
+      if (accordionButton) {
+        accordionButton.ariaExpanded = true;
+      }
     }
 
     submenuContent.append(...submenus);
