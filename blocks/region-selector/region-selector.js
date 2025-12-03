@@ -1,6 +1,4 @@
-import { fetchLanguagePlaceholders, getPathDetails } from '../../scripts/scripts.js';
-
-import { toCamelCase } from '../../scripts/utils/common-utils.js';
+import { getPathDetails } from '../../scripts/scripts.js';
 
 const decorate = async (block) => {
   // Fail check
@@ -20,38 +18,19 @@ const decorate = async (block) => {
     }
   }
 
-  // Fetching placeholders.json data
-  const placeholder = await fetchLanguagePlaceholders();
-
   const { lang, region, langRegion } = getPathDetails();
 
   const regionSelectorFlag =
-    window.eds_config?.regional_selector?.flags[langRegion] || '';
+    window.eds_config?.regional_selector?.flags[langRegion] || 'runway_country_flag_australia';
 
-  if (!placeholder || Object.keys(placeholder).length === 0) {
-    // Fallback if placeholders don't load
-    block.innerHTML = `
-      <a href="${regionSelectionUrl}" class="region-selector-anchor body-02" aria-labelledby="regionSelector">
-        <span id="regionSelector" class="visually-hidden">Change country and language. Current selection: Australia English</span>
-        <span class="flag" aria-hidden="true">
-          <img src="${window.hlx.codeBasePath}/icons/${regionSelectorFlag}.svg" alt="">
-        </span>
-        <span class="region-label" aria-hidden="true">${region.toUpperCase()}  |  ${lang.toUpperCase()}</span>
-      </a>
-    `;
-    return;
-  }
+  const codeBasePath = window.hlx?.codeBasePath || '';
 
-  const langRegionSelectorTextKey = toCamelCase(`region-selector-full-${langRegion}`);
-
-  const { screenReaderText } = placeholder;
-
-  // Build final markup in one write → minimal reflow
+  // Build final markup with fallback text
   block.innerHTML = `
     <a href="${regionSelectionUrl}" class="region-selector-anchor body-02" aria-labelledby="regionSelector">
-      <span id="regionSelector" class="visually-hidden">${screenReaderText} ${placeholder[langRegionSelectorTextKey]}</span>
+      <span id="regionSelector" class="visually-hidden">Change country and language. Current selection: ${region.toUpperCase()} ${lang.toUpperCase()}</span>
       <span class="flag" aria-hidden="true">
-        <img src="${window.hlx.codeBasePath}/icons/${regionSelectorFlag}.svg" alt="">
+        <img src="${codeBasePath}/icons/${regionSelectorFlag}.svg" alt="">
       </span>
       <span class="region-label" aria-hidden="true">${region.toUpperCase()}  |  ${lang.toUpperCase()}</span>
     </a>
