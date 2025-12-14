@@ -192,19 +192,20 @@ export function decorateExternalImages(main) {
         }
       }
 
-      // Source 1: WebP for mobile (750px width)
-      const source1 = document.createElement('source');
-      source1.type = 'image/webp';
-      const url1 = new URL(baseUrl);
-      url1.searchParams.set('wid', '750');
-      url1.searchParams.set('fmt', 'webp-alpha');
+      // Source 2: WebP for desktop (2000px width)
+      const source2 = document.createElement('source');
+      source2.type = 'image/webp';
+      source2.media = '(min-width: 600px)';
+      const url2 = new URL(baseUrl);
+      url2.searchParams.set('wid', '2000');
+      url2.searchParams.set('fmt', 'webp-alpha');
       if (noCache) {
-        url1.searchParams.set('cache', 'off');
+        url2.searchParams.set('cache', 'off');
       }
       if (rotation) {
-        url1.searchParams.set('rotate', rotation);
+        url2.searchParams.set('rotate', rotation);
       }
-      source1.srcset = url1.toString();
+      source2.srcset = url2.toString();
 
       // Source 3: JPEG for desktop (2000px width)
       const source3 = document.createElement('source');
@@ -222,26 +223,23 @@ export function decorateExternalImages(main) {
       }
       source3.srcset = url3.toString();
 
-      // Source 2: WebP for desktop (2000px width)
-      const source2 = document.createElement('source');
-      source2.type = 'image/webp';
-      source2.media = '(min-width: 600px)';
-      const url2 = new URL(baseUrl);
-      url2.searchParams.set('wid', '2000');
-      url2.searchParams.set('fmt', 'webp-alpha');
+      // Source 1: WebP for mobile (750px width)
+      const source1 = document.createElement('source');
+      source1.type = 'image/webp';
+      const url1 = new URL(baseUrl);
+      url1.searchParams.set('wid', '750');
+      url1.searchParams.set('fmt', 'webp-alpha');
       if (noCache) {
-        url2.searchParams.set('cache', 'off');
+        url1.searchParams.set('cache', 'off');
       }
       if (rotation) {
-        url2.searchParams.set('rotate', rotation);
+        url1.searchParams.set('rotate', rotation);
       }
-      source2.srcset = url2.toString();
+      source1.srcset = url1.toString();
 
       // Fallback image: JPEG for mobile (750px width)
       const img = document.createElement('img');
       img.loading = 'lazy';
-      img.width = '1620';
-      img.height = '1080';
       const imgUrl = new URL(baseUrl);
       imgUrl.searchParams.set('wid', '750');
       imgUrl.searchParams.set('fmt', 'jpg');
@@ -257,10 +255,11 @@ export function decorateExternalImages(main) {
         img.setAttribute('alt', a.innerText);
       }
 
-      pic.appendChild(source3);
+      // Append in correct order: desktop sources, mobile source, then img fallback
       pic.appendChild(source2);
-      pic.appendChild(img);
+      pic.appendChild(source3);
       pic.appendChild(source1);
+      pic.appendChild(img);
       a.replaceWith(pic);
     } else if (isDMOpenAPIUrl(a.href)) {
       // Original DM Open API URL logic
