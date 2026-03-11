@@ -1,7 +1,7 @@
 
 function getFieldText(block, propName, positionalRow) {
   const ueRow = block.querySelector(`[data-aue-prop="${propName}"]`);
-  if (ueRow) return ueRow.querySelector('div')?.textContent?.trim() || '';
+  if (ueRow) return ueRow.textContent?.trim() || '';
   return positionalRow?.querySelector('div')?.textContent?.trim() || '';
 }
 
