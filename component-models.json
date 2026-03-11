@@ -554,7 +554,7 @@
       {
         "component": "text",
         "name": "preset",
-        "label": "Image Preset",
+        "label": "Image Preset323",
         "description": "Enter the Dynamic Media image preset name to apply (e.g. 'my-preset'). Leave empty to use default delivery.",
         "valueType": "string",
         "value": ""
