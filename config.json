@@ -12,7 +12,7 @@
     },
     "rootPath": "/content/dam/ritsriva-ue/icons",
     "assetDomainMapping": {
-        "delivery-p66302-e574366.adobeaemcloud.com": "https://dynamicmedia-openapi.scene7.com/"
+        "delivery-p66302-e574366.adobeaemcloud.com": "dynamicmedia-openapi.scene7.com"
     },
     "filterSchema": [
         {
