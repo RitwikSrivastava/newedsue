@@ -1,4 +1,11 @@
 
+function getFieldText(block, propName, positionalRow) {
+  const ueRow = block.querySelector(`[data-aue-prop="${propName}"]`);
+  if (ueRow) return ueRow.querySelector('div')?.textContent?.trim() || '';
+  return positionalRow?.querySelector('div')?.textContent?.trim() || '';
+}
+
+
 function applyParamToPicture(picture, key, value) {
   if (!picture || !value) return;
 
@@ -17,13 +24,11 @@ function applyParamToPicture(picture, key, value) {
 }
 
 export default function decorate(block) {
-  // Use exact positional indices — decorateExternalImages no longer removes sibling rows,
-  // so the original model field order is preserved in block.children.
   const [imageRow, , altRow, rotationRow, presetRow] = [...block.children];
 
-  const altText  = altRow?.querySelector('div')?.textContent?.trim() || '';
-  const rotation = rotationRow?.querySelector('div')?.textContent?.trim() || '';
-  const preset   = presetRow?.querySelector('div')?.textContent?.trim() || '';
+  const altText  = getFieldText(block, 'imageTitle', altRow);
+  const rotation = getFieldText(block, 'rotation', rotationRow);
+  const preset   = getFieldText(block, 'preset', presetRow);
 
   const picture = imageRow?.querySelector('picture');
 
