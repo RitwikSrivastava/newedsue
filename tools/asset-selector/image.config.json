@@ -7,7 +7,6 @@
         "delivery",
         "author"
     ],  
-  "alwaysUseDMDelivery": true,
   "expiryOptions": {
         "allowSelectionAndDrag": false
     },
