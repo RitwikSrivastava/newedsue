@@ -562,6 +562,57 @@
     ]
   },
   {
+    "id": "custom-asset-two",
+    "fields": [
+      {
+        "component": "custom-asset-namespace:custom-asset",
+        "name": "image",
+        "label": "Image",
+        "configUrl": "/content/dam/ritsriva-ue/config.json",
+        "valueType": "string"
+      },
+      {
+        "component": "custom-asset-namespace:custom-asset-mimetype",
+        "valueType": "string",
+        "name": "imageMimeType"
+      },
+      {
+        "component": "text",
+        "name": "imageTitle",
+        "label": "Alt Text",
+        "valueType": "string"
+      },
+      {
+        "component": "select",
+        "name": "rotation",
+        "value": "",
+        "label": "Rotation",
+        "description": "Select the rotation which will rotate the image.",
+        "valueType": "string",
+        "options": [
+          { "name": "None", "value": "" },
+          { "name": "30", "value": "30" },
+          { "name": "45", "value": "45" },
+          { "name": "60", "value": "60" },
+          { "name": "90", "value": "90" },
+          { "name": "120", "value": "120" },
+          { "name": "180", "value": "180" },
+          { "name": "270", "value": "270" },
+          { "name": "300", "value": "300" },
+          { "name": "330", "value": "330" }
+        ]
+      },
+      {
+        "component": "text",
+        "name": "preset",
+        "label": "Image Preset",
+        "description": "Enter the Dynamic Media image preset name to apply (e.g. 'my-preset'). Leave empty to use default delivery.",
+        "valueType": "string",
+        "value": ""
+      }
+    ]
+  },
+  {
     "id": "quote",
     "fields": [
        {
