@@ -568,7 +568,7 @@
         "component": "custom-asset-namespace:custom-asset",
         "name": "image",
         "label": "Image",
-        "description": "Required. Select an image using the custom asset picker (author paths and Dynamic Media delivery URLs when configured).",
+        "description": "Require d. Select an image using the custom asset picker (author paths and Dynamic Media delivery URLs when configured).",
         "required": true,
         "configUrl": "https://main--newedsue--RitwikSrivastava.aem.page/tools/asset-selector/image.config.json",
         "valueType": "string"
