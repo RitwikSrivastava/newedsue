@@ -271,6 +271,21 @@
           }
         },
         {
+          "title": "Custom Image One Required",
+          "id": "custom-asset-one-required",
+          "plugins": {
+            "xwalk": {
+              "page": {
+                "resourceType": "core/franklin/components/block/v1/block",
+                "template": {
+                  "name": "Custom Image One",
+                  "model": "custom-asset-one-required"
+                }
+              }
+            }
+          }
+        },
+        {
           "title": "Quote",
           "id": "quote",
           "plugins": {
