@@ -14,21 +14,21 @@
     "filterSchema": [
         {
           "fields": [
-          {
-            "defaultValue": ["dam:assetStatus==approved"],
-            "element": "radiogroup",
-            "name": "property",
-            "options": [
-              {
-                "label": "Approved",
-                "value": "dam:assetStatus==approved"
-              }
-            ],
-            "readOnly": true
-          }
-        ],
-        "groupKey": "StatusGroup",
-        "header": "Approval Status"
-      }
+            {
+              "defaultValue": ["dam:assetStatus==approved"],
+              "element": "radiogroup",
+              "name": "property",
+              "options": [
+                {
+                  "label": "Approved",
+                  "value": "dam:assetStatus==approved"
+                }
+              ],
+              "readOnly": true
+            }
+          ],
+          "groupKey": "StatusGroup",
+          "header": "Approval Status"
+        }
       ]
 }
