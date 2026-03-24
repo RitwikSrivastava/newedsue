@@ -10,25 +10,30 @@
     "expiryOptions": {
         "allowSelectionAndDrag": false
     },
-    "assetDomainMapping": {"delivery-p66302-e574366.adobeaemcloud.com": "dynamicmedia-openapi.scene7.com"},
+    "alwaysUseDMDelivery": true,
+    "assetDomainMapping": {
+        "delivery-p66302-e574366.adobeaemcloud.com": "mediapreprod.store.testdomain.com",
+        "delivery-p166604-e1781313.adobeaemcloud.com": "ednedjendd.store.testdomain.com"
+          },
     "filterSchema": [
-        {
-          "fields": [
-            {
-              "defaultValue": ["dam:assetStatus==approved"],
-              "element": "radiogroup",
-              "name": "property",
-              "options": [
-                {
-                  "label": "Approved",
-                  "value": "dam:assetStatus==approved"
-                }
-              ],
-              "readOnly": true
-            }
-          ],
-          "groupKey": "StatusGroup",
-          "header": "Approval Status"
-        }
+      {
+        "fields": [
+          {
+            "defaultValue": ["dam:assetStatus==approved"],
+            "element": "radiogroup",
+            "name": "property",
+            "options": [
+              {
+                "label": "Approved",
+                "value": "dam:assetStatus==approved"
+              }
+            ],
+            "readOnly": true
+          }
+        ],
+        "groupKey": "StatusGroup",
+        "header": "Approval Status"
+      }
       ]
+      
 }
