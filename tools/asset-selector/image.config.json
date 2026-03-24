@@ -14,21 +14,21 @@
     "filterSchema": [
         {
           "fields": [
-            {
-              "columns": 3,
-              "defaultValue": ["arena"],
-              "element": "taggroup",
-              "name": "property=xcm:keywords.id=",
-              "options": [
-                {
-                  "label": "Demo",
-                  "value": "demo"
-                }
-              ]
-            }
-          ],
-          "groupKey": "AssetTagsGroup",
-          "header": "Assets Tags"
-        }
+          {
+            "defaultValue": ["dam:assetStatus==approved"],
+            "element": "radiogroup",
+            "name": "property",
+            "options": [
+              {
+                "label": "Approved",
+                "value": "dam:assetStatus==approved"
+              }
+            ],
+            "readOnly": true
+          }
+        ],
+        "groupKey": "StatusGroup",
+        "header": "Approval Status"
+      }
       ]
 }
