@@ -14,13 +14,13 @@
       {
         "fields": [
           {
-            "defaultValue": ["metadata.application.dam:assetStatus==approved"],
+            "defaultValue": ["dam:assetStatus==approved"],
             "element": "radiogroup",
             "name": "property",
             "options": [
               {
                 "label": "Approved",
-                "value": "metadata.application.dam:assetStatus==approved"
+                "value": "dam:assetStatus==approved"
               }
             ],
             "readOnly": true
