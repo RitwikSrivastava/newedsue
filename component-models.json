@@ -200,11 +200,6 @@
         "valueType": "string"
       },
       {
-        "component": "custom-asset-namespace:custom-asset-mimetype",
-        "valueType": "string",
-        "name": "imageMimeType"
-      },
-      {
         "component": "text",
         "name": "imageAlt",
         "label": "Alt Text",
@@ -352,11 +347,6 @@
         "label": "Image",
         "configUrl": "https://main--newedsue--RitwikSrivastava.aem.page/tools/asset-selector/image.config.json",
         "valueType": "string"
-      },
-      {
-        "component": "custom-asset-namespace:custom-asset-mimetype",
-        "valueType": "string",
-        "name": "imageMimeType"
       },
       {
         "component": "text",
