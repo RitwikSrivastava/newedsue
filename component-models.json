@@ -408,6 +408,13 @@
         "name": "empty2",
         "value": "",
         "valueType": "string"
+      },
+      {
+        "component": "text",
+        "name": "smartCrop",
+        "label": "Smart crop profile (optional, e.g. generic-3x2)",
+        "valueType": "string",
+        "value": ""
       }
     ]
   },

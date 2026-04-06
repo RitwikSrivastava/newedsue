@@ -98,7 +98,21 @@ function attachTestIdToElements(block) {
 /*
  * Decorate Image and Text Item
  */
-async function decorateItem(parentBlock, block, layoutClass, classes = []) {
+/**
+ * Optional DM smart crop profile name from authoring (e.g. generic-3x2).
+ * @param {HTMLElement} block
+ * @param {Element | undefined} positionalRow
+ * @returns {string}
+ */
+function getImageAndTextSmartCrop(block, positionalRow) {
+  const ueCell = block.querySelector('[data-aue-prop="smartCrop"]');
+  if (ueCell) {
+    return getTextContent(ueCell);
+  }
+  return getTextContent(positionalRow);
+}
+
+async function decorateItem(parentBlock, block, classes = []) {
   const [
     image,
     hideAltText,
@@ -110,15 +124,12 @@ async function decorateItem(parentBlock, block, layoutClass, classes = []) {
     bodyText,
     ctas,
     campaignCode,
+    smartCropRow,
   ] = block.children;
-
-  const smartCrops = classes.includes('highlighted')
-    ? { all: { crop: 'generic-4x5', layout: layoutClass } }
-    : { all: { crop: 'generic-3x2', layout: layoutClass } };
 
   const highlighted = classes.includes('highlighted');
   const dmImgMarkup = buildImageAndTextDmMarkup(image, {
-    smartCropName: smartCrops.all.crop,
+    smartCropName: getImageAndTextSmartCrop(block, smartCropRow),
     dmRole: highlighted ? 'hero' : 'content',
     eager: highlighted,
     excludeAltText: isFieldTrue(hideAltText),
@@ -234,7 +245,6 @@ export default async function decorateContainer(block) {
 
   const imageAndTextItems = [];
   let numOfColumns = 1;
-  let layoutClass = null;
 
   // Get styles from single row items
   [...block.children].forEach((containerItem) => {
@@ -248,7 +258,6 @@ export default async function decorateContainer(block) {
         // Get the selected column option to check if it's stacked
         const layoutStyleMatch = textContent.match(/^layout-([0-9])-col$/);
         if (layoutStyleMatch) {
-          layoutClass = textContent;
           numOfColumns = parseInt(layoutStyleMatch[1], 10);
         }
       }
@@ -275,7 +284,7 @@ export default async function decorateContainer(block) {
         blockStyles,
       );
 
-      return decorateItem(block, imageAndTextItem, layoutClass, classes);
+      return decorateItem(block, imageAndTextItem, classes);
     }),
   );
 
@@ -310,12 +319,12 @@ function escapeHtmlAttr(value) {
 /**
  * Build a DM SDK-managed img (or static SVG img) for image-and-text.
  * @param {HTMLElement} imageCell
- * @param {{ smartCropName: string, dmRole: string, eager: boolean, excludeAltText: boolean }} options
+ * @param {{ smartCropName?: string, dmRole: string, eager: boolean, excludeAltText: boolean }} options
  * @returns {string} HTML snippet or empty string
  */
 function buildImageAndTextDmMarkup(imageCell, options) {
   const {
-    smartCropName,
+    smartCropName = '',
     dmRole,
     eager,
     excludeAltText,
@@ -360,9 +369,13 @@ function buildImageAndTextDmMarkup(imageCell, options) {
     ? ` data-dm-role="${escapeHtmlAttr(dmRole)}"`
     : '';
 
+  const smartCropAttr = smartCropName.trim()
+    ? ` data-dm-smartcrop="${escapeHtmlAttr(smartCropName.trim())}"`
+    : '';
+
   if (eager) {
-    return `<img class="imagetext-dm-image" alt="${escapeHtmlAttr(alt)}" data-dm-src="${escapeHtmlAttr(dmSrc)}" data-dm-origin="${escapeHtmlAttr(origin)}" data-dm-smartcrop="${escapeHtmlAttr(smartCropName)}"${roleAttr} data-dm-priority="" loading="eager" fetchpriority="high" />`;
+    return `<img class="imagetext-dm-image" alt="${escapeHtmlAttr(alt)}" data-dm-src="${escapeHtmlAttr(dmSrc)}" data-dm-origin="${escapeHtmlAttr(origin)}"${smartCropAttr}${roleAttr} data-dm-priority="" loading="eager" fetchpriority="high" />`;
   }
 
-  return `<img class="imagetext-dm-image" alt="${escapeHtmlAttr(alt)}" data-dm-src="${escapeHtmlAttr(dmSrc)}" data-dm-origin="${escapeHtmlAttr(origin)}" data-dm-smartcrop="${escapeHtmlAttr(smartCropName)}"${roleAttr} loading="lazy" />`;
+  return `<img class="imagetext-dm-image" alt="${escapeHtmlAttr(alt)}" data-dm-src="${escapeHtmlAttr(dmSrc)}" data-dm-origin="${escapeHtmlAttr(origin)}"${smartCropAttr}${roleAttr} loading="lazy" />`;
 }
