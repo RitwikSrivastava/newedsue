@@ -48,12 +48,13 @@ function applyOptionalDataset(img, name, value) {
 export default async function decorate(block) {
   const rows = [...block.children];
   const imageRow = rows[0];
-  const altText = getFieldText(block, 'imageAlt', rows[1]);
-  const configuredOrigin = getFieldText(block, 'origin', rows[2]);
-  const priority = getFieldText(block, 'priority', rows[3]);
-  const preset = getFieldText(block, 'preset', rows[4]);
-  const smartCrop = getFieldText(block, 'smartCrop', rows[5]);
-  const role = getFieldText(block, 'role', rows[6]);
+  // Row order: image, imageMimeType, imageAlt, origin, priority, preset, smartCrop, role
+  const altText = getFieldText(block, 'imageAlt', rows[2]);
+  const configuredOrigin = getFieldText(block, 'origin', rows[3]);
+  const priority = getFieldText(block, 'priority', rows[4]);
+  const preset = getFieldText(block, 'preset', rows[5]);
+  const smartCrop = getFieldText(block, 'smartCrop', rows[6]);
+  const role = getFieldText(block, 'role', rows[7]);
   const imageUrl = getImageUrl(imageRow);
 
   if (!imageUrl) {

@@ -21,11 +21,17 @@
       "id": "dm-image",
       "fields": [
         {
-          "component": "reference",
-          "valueType": "string",
+          "component": "custom-asset-namespace:custom-asset",
           "name": "image",
-          "label": "DM Image URL",
-          "multi": false
+          "label": "DM Image",
+          "description": "Select a Dynamic Media delivery URL via the custom asset picker.",
+          "configUrl": "https://main--newedsue--RitwikSrivastava.aem.page/tools/asset-selector/image.config.json",
+          "valueType": "string"
+        },
+        {
+          "component": "custom-asset-namespace:custom-asset-mimetype",
+          "valueType": "string",
+          "name": "imageMimeType"
         },
         {
           "component": "text",
