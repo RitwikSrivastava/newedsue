@@ -1,3 +1,6 @@
+import { buildDamUrl } from '../../scripts/utils/dam-open-apis.js';
+import { getDmImageUrlFromRow, initDmSdkInRoot } from '../../scripts/utils/dm-sdk-loader.js';
+import { isSvg } from '../../scripts/utils/dom.js';
 
 function getFieldText(block, propName, positionalRow) {
   const ueRow = block.querySelector(`[data-aue-prop="${propName}"]`);
@@ -5,46 +8,59 @@ function getFieldText(block, propName, positionalRow) {
   return positionalRow?.querySelector('div')?.textContent?.trim() || '';
 }
 
-
-function applyParamToPicture(picture, key, value) {
-  if (!picture || !value) return;
-
-  picture.querySelectorAll('source').forEach((source) => {
-    const url = new URL(source.srcset);
-    url.searchParams.set(key, value);
-    source.srcset = url.toString();
-  });
-
-  const img = picture.querySelector('img');
-  if (img) {
-    const url = new URL(img.src);
-    url.searchParams.set(key, value);
-    img.src = url.toString();
-  }
-}
-
-export default function decorate(block) {
+export default async function decorate(block) {
   const [imageRow, , altRow, rotationRow, presetRow] = [...block.children];
 
-  const altText  = getFieldText(block, 'imageTitle', altRow);
+  const altText = getFieldText(block, 'imageTitle', altRow);
   const rotation = getFieldText(block, 'rotation', rotationRow);
-  const preset   = getFieldText(block, 'preset', presetRow);
+  const preset = getFieldText(block, 'preset', presetRow);
 
-  const picture = imageRow?.querySelector('picture');
-
-  if (!picture) return;
-
-  // Set alt text on the fallback <img>
-  const img = picture.querySelector('img');
-  if (img && altText) {
-    img.setAttribute('alt', altText);
+  const rawUrl = getDmImageUrlFromRow(imageRow);
+  if (!rawUrl) {
+    return;
   }
 
-  // Inject rotation and preset into every source URL (server-side DM transforms)
-  applyParamToPicture(picture, 'rotate', rotation);
-  applyParamToPicture(picture, 'preset', preset);
+  const sourceImg = imageRow?.querySelector('picture img, img');
 
-  // Clear the raw field rows and render only the picture
   block.textContent = '';
-  block.append(picture);
+
+  if (sourceImg && isSvg(sourceImg)) {
+    let href = rawUrl;
+    try {
+      href = buildDamUrl(rawUrl);
+    } catch (e) {
+      // keep rawUrl
+    }
+    const img = document.createElement('img');
+    img.src = href;
+    img.alt = altText || '';
+    img.loading = 'lazy';
+    block.append(img);
+    return;
+  }
+
+  let url;
+  try {
+    url = new URL(buildDamUrl(rawUrl), window.location.href);
+  } catch (e) {
+    url = new URL(rawUrl, window.location.href);
+  }
+
+  if (rotation) {
+    url.searchParams.set('rotate', rotation);
+  }
+  if (preset) {
+    url.searchParams.set('preset', preset);
+  }
+
+  const img = document.createElement('img');
+  img.alt = altText || '';
+  img.dataset.dmSrc = url.toString();
+  img.dataset.dmOrigin = url.origin;
+
+  block.append(img);
+
+  await initDmSdkInRoot(block, (imgEl, src) => {
+    imgEl.src = src;
+  });
 }

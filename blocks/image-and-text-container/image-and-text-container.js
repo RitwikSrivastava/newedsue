@@ -3,8 +3,10 @@ import {
   getTextContent,
   createElementWithClasses,
   isFieldTrue,
+  isSvg,
 } from '../../scripts/utils/dom.js';
-import decorateDynamicMediaImage from '../../scripts/utils/dam-open-apis.js';
+import { buildDamUrl } from '../../scripts/utils/dam-open-apis.js';
+import { getDmImageUrlFromRow, initDmSdkInRoot } from '../../scripts/utils/dm-sdk-loader.js';
 import { EVENT_NAME, triggerBlockCardClick } from '../../scripts/martech/datalayer.js';
 import {
   attachTestId,
@@ -80,7 +82,7 @@ function attachTestIdToElements(block) {
     { selector: '.imagetext-content-container', elementName: 'content-container' },
     { selector: '.imagetext-badge', elementName: 'badge' },
     { selector: '.imagetext-image-container', elementName: 'image-container' },
-    { selector: '.imagetext-image-container picture', elementName: 'image' },
+    { selector: '.imagetext-image-container img', elementName: 'image' },
     { selector: '.imagetext-caption', elementName: 'caption' },
     { selector: '.imagetext-intro-text', elementName: 'intro' },
     { selector: '.imagetext-body-text', elementName: 'body' },
@@ -114,8 +116,11 @@ async function decorateItem(parentBlock, block, layoutClass, classes = []) {
     ? { all: { crop: 'generic-4x5', layout: layoutClass } }
     : { all: { crop: 'generic-3x2', layout: layoutClass } };
 
-  const pictureEl = decorateDynamicMediaImage(image, {
-    smartCrops,
+  const highlighted = classes.includes('highlighted');
+  const dmImgMarkup = buildImageAndTextDmMarkup(image, {
+    smartCropName: smartCrops.all.crop,
+    dmRole: highlighted ? 'hero' : 'content',
+    eager: highlighted,
     excludeAltText: isFieldTrue(hideAltText),
   });
 
@@ -206,10 +211,10 @@ async function decorateItem(parentBlock, block, layoutClass, classes = []) {
     </div>
   `;
 
-  const imageContainer = pictureEl ? `
+  const imageContainer = dmImgMarkup ? `
     <figure class="imagetext-image-container">
       ${badgeHTML}
-      ${pictureEl.outerHTML}
+      ${dmImgMarkup}
       ${captionHTML}
     </figure>
   ` : '';
@@ -284,4 +289,80 @@ export default async function decorateContainer(block) {
 
   // testing requirement - set attribute 'data-testid' for elements
   attachTestIdToElements(block);
+
+  await initDmSdkInRoot(imageTextWrapper, (imgEl, src) => {
+    imgEl.src = src;
+  });
+}
+
+/**
+ * Escape text for use in double-quoted HTML attributes.
+ * @param {string | null | undefined} value
+ * @returns {string}
+ */
+function escapeHtmlAttr(value) {
+  return String(value ?? '')
+    .replace(/&/g, '&amp;')
+    .replace(/"/g, '&quot;')
+    .replace(/</g, '&lt;');
+}
+
+/**
+ * Build a DM SDK-managed img (or static SVG img) for image-and-text.
+ * @param {HTMLElement} imageCell
+ * @param {{ smartCropName: string, dmRole: string, eager: boolean, excludeAltText: boolean }} options
+ * @returns {string} HTML snippet or empty string
+ */
+function buildImageAndTextDmMarkup(imageCell, options) {
+  const {
+    smartCropName,
+    dmRole,
+    eager,
+    excludeAltText,
+  } = options;
+
+  const rawUrl = getDmImageUrlFromRow(imageCell);
+  if (!rawUrl) {
+    return '';
+  }
+
+  const sourceImg = imageCell.querySelector('img');
+  const alt = excludeAltText ? '' : (sourceImg?.getAttribute('alt')?.trim() || '');
+
+  if (sourceImg && isSvg(sourceImg)) {
+    let href = rawUrl;
+    try {
+      href = buildDamUrl(rawUrl);
+    } catch (e) {
+      // keep rawUrl
+    }
+    return `<img class="imagetext-dm-image" src="${escapeHtmlAttr(href)}" alt="${escapeHtmlAttr(alt)}" loading="lazy" />`;
+  }
+
+  let imageUrl;
+  try {
+    imageUrl = buildDamUrl(rawUrl);
+  } catch (e) {
+    return '';
+  }
+
+  let dmSrc;
+  let origin;
+  try {
+    const u = new URL(imageUrl, window.location.href);
+    origin = u.origin;
+    dmSrc = u.toString();
+  } catch (e) {
+    return '';
+  }
+
+  const roleAttr = dmRole
+    ? ` data-dm-role="${escapeHtmlAttr(dmRole)}"`
+    : '';
+
+  if (eager) {
+    return `<img class="imagetext-dm-image" alt="${escapeHtmlAttr(alt)}" data-dm-src="${escapeHtmlAttr(dmSrc)}" data-dm-origin="${escapeHtmlAttr(origin)}" data-dm-smartcrop="${escapeHtmlAttr(smartCropName)}"${roleAttr} data-dm-priority="" loading="eager" fetchpriority="high" />`;
+  }
+
+  return `<img class="imagetext-dm-image" alt="${escapeHtmlAttr(alt)}" data-dm-src="${escapeHtmlAttr(dmSrc)}" data-dm-origin="${escapeHtmlAttr(origin)}" data-dm-smartcrop="${escapeHtmlAttr(smartCropName)}"${roleAttr} loading="lazy" />`;
 }
