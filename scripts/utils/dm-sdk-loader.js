@@ -1,6 +1,16 @@
 /**
  * Shared Dynamic Media delivery SDK bootstrap for EDS blocks.
- * Loads dm-sdk.mjs once, runs scanDom on a subtree, and starts watchDom once per page.
+ *
+ * The vendored dm-sdk.mjs self-initialises on load: it calls scanDom(document)
+ * and watchDom() automatically via its DOMContentLoaded / immediate boot.
+ * This loader's job is:
+ *   1. Ensure the module is imported exactly once (singleton promise).
+ *   2. Optionally call scanDom(root) for a block subtree to catch images
+ *      that were injected into the DOM after the SDK's initial document scan.
+ *   3. Provide getDmImageUrlFromRow() for block-row URL resolution.
+ *
+ * watchDom() is intentionally NOT called here — the SDK self-init already
+ * starts the MutationObserver. A second call would create a duplicate observer.
  */
 
 const DM_SDK_IMPORT = new URL('../lib/dm-sdk.mjs', import.meta.url).href;
@@ -8,10 +18,8 @@ const DM_SDK_IMPORT = new URL('../lib/dm-sdk.mjs', import.meta.url).href;
 /** @type {string} */
 const LOADER_PROMISE_KEY = '__edsDmSdkLoader';
 
-/** @type {string} */
-const WATCH_STARTED_KEY = '__edsDmSdkWatching';
-
 /**
+ * Loads dm-sdk.mjs exactly once per page.
  * @returns {Promise<typeof import('../lib/dm-sdk.mjs')>}
  */
 export function loadDmSdk() {
@@ -36,7 +44,10 @@ export function getDmImageUrlFromRow(row) {
 }
 
 /**
- * Runs DM SDK discovery on `root` and ensures MutationObserver is started once.
+ * Loads the SDK and runs scanDom on `root` to activate any img[data-dm-src]
+ * elements that may have been added after the SDK's initial document scan.
+ * Falls back to setting img.src directly if the SDK fails to load.
+ *
  * @param {ParentNode | null | undefined} root
  * @param {(img: HTMLImageElement, src: string) => void} [onFallback]
  * @returns {Promise<void>}
@@ -48,10 +59,6 @@ export async function initDmSdkInRoot(root, onFallback) {
     const sdk = await loadDmSdk();
     if (typeof sdk.scanDom === 'function') {
       sdk.scanDom(root);
-    }
-    if (typeof sdk.watchDom === 'function' && !window[WATCH_STARTED_KEY]) {
-      sdk.watchDom();
-      window[WATCH_STARTED_KEY] = true;
     }
   } catch (error) {
     // eslint-disable-next-line no-console
