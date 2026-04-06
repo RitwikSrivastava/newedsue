@@ -555,6 +555,13 @@
     "id": "custom-asset-one-required",
     "fields": [
       {
+        "component": "text",
+        "name": "textAboveImage",
+        "label": "Text above image",
+        "valueType": "string",
+        "value": ""
+      },
+      {
         "component": "custom-asset-namespace:custom-asset",
         "name": "image",
         "label": "Image",
@@ -562,11 +569,6 @@
         "required": true,
         "configUrl": "https://main--newedsue--RitwikSrivastava.aem.page/tools/asset-selector/image.config.json",
         "valueType": "string"
-      },
-      {
-        "component": "custom-asset-namespace:custom-asset-mimetype",
-        "valueType": "string",
-        "name": "imageMimeType"
       },
       {
         "component": "text",
