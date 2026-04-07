@@ -112,7 +112,7 @@ function getImageAndTextSmartCrop(block, positionalRow) {
   return getTextContent(positionalRow);
 }
 
-async function decorateItem(parentBlock, block, classes = []) {
+async function decorateItem(parentBlock, block, classes = [], isFirst = false) {
   const [
     image,
     hideAltText,
@@ -132,6 +132,9 @@ async function decorateItem(parentBlock, block, classes = []) {
     smartCropName: getImageAndTextSmartCrop(block, smartCropRow),
     dmRole: highlighted ? 'hero' : 'content',
     eager: highlighted,
+    // First item in the container is above the fold on mobile even when not
+    // highlighted — make it eager so the browser doesn't defer it with lazy loading.
+    eagerLoad: isFirst && !highlighted,
     excludeAltText: isFieldTrue(hideAltText),
   });
 
@@ -284,7 +287,7 @@ export default async function decorateContainer(block) {
         blockStyles,
       );
 
-      return decorateItem(block, imageAndTextItem, classes);
+      return decorateItem(block, imageAndTextItem, classes, index === 0);
     }),
   );
 
@@ -327,6 +330,7 @@ function buildImageAndTextDmMarkup(imageCell, options) {
     smartCropName = '',
     dmRole,
     eager,
+    eagerLoad,
     excludeAltText,
   } = options;
 
@@ -373,9 +377,24 @@ function buildImageAndTextDmMarkup(imageCell, options) {
     ? ` data-dm-smartcrop="${escapeHtmlAttr(smartCropName.trim())}"`
     : '';
 
+  // Copy intrinsic dimensions from the original picture/img so the browser can
+  // reserve layout space before the image loads (prevents CLS).
+  // "aspect-ratio: auto" set by the SDK only works when width + height attrs exist.
+  const srcWidth = sourceImg?.getAttribute('width') || '';
+  const srcHeight = sourceImg?.getAttribute('height') || '';
+  const sizeAttrs = srcWidth && srcHeight
+    ? ` width="${escapeHtmlAttr(srcWidth)}" height="${escapeHtmlAttr(srcHeight)}"`
+    : '';
+
   if (eager) {
-    return `<img class="imagetext-dm-image" alt="${escapeHtmlAttr(alt)}" data-dm-src="${escapeHtmlAttr(dmSrc)}" data-dm-origin="${escapeHtmlAttr(origin)}"${smartCropAttr}${roleAttr} data-dm-priority="" loading="eager" fetchpriority="high" />`;
+    return `<img class="imagetext-dm-image" alt="${escapeHtmlAttr(alt)}" data-dm-src="${escapeHtmlAttr(dmSrc)}" data-dm-origin="${escapeHtmlAttr(origin)}"${sizeAttrs}${smartCropAttr}${roleAttr} data-dm-priority="" loading="eager" fetchpriority="high" />`;
   }
 
-  return `<img class="imagetext-dm-image" alt="${escapeHtmlAttr(alt)}" data-dm-src="${escapeHtmlAttr(dmSrc)}" data-dm-origin="${escapeHtmlAttr(origin)}"${smartCropAttr}${roleAttr} loading="lazy" />`;
+  // eagerLoad: first-item-in-container that isn't the hero — no priority signal,
+  // just remove lazy so the browser loads it without waiting for intersection.
+  if (eagerLoad) {
+    return `<img class="imagetext-dm-image" alt="${escapeHtmlAttr(alt)}" data-dm-src="${escapeHtmlAttr(dmSrc)}" data-dm-origin="${escapeHtmlAttr(origin)}"${sizeAttrs}${smartCropAttr}${roleAttr} loading="eager" />`;
+  }
+
+  return `<img class="imagetext-dm-image" alt="${escapeHtmlAttr(alt)}" data-dm-src="${escapeHtmlAttr(dmSrc)}" data-dm-origin="${escapeHtmlAttr(origin)}"${sizeAttrs}${smartCropAttr}${roleAttr} loading="lazy" />`;
 }

@@ -432,6 +432,12 @@ async function loadLazy(doc) {
   // added by lazy-loaded blocks. A second activation would fire up to two more scanDom
   // calls (rAF) against images that are already managed (data-dm-managed="true").
 
+  // After lazy sections load, check if any new DM images landed in the viewport
+  // (e.g. image-and-text-container on mobile) that weren't promoted during loadEager
+  // because they didn't exist yet. This ensures the first visible lazy-section image
+  // gets fetchpriority=high and preconnects are fired for new origins.
+  promoteFirstBlockDmImage(main);
+
   const { hash } = window.location;
   const element = hash ? doc.getElementById(hash.substring(1)) : false;
   if (hash && element) element.scrollIntoView();
