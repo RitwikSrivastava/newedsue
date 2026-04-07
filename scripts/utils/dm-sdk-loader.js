@@ -48,6 +48,11 @@ export function getDmImageUrlFromRow(row) {
  * elements that may have been added after the SDK's initial document scan.
  * Falls back to setting img.src directly if the SDK fails to load.
  *
+ * Skips the scan entirely if every img[data-dm-src] in `root` is already
+ * managed (data-dm-managed="true"), which means the main-level activateDmSdk()
+ * rAF scan already processed them and a second scan would be a no-op with
+ * unnecessary overhead.
+ *
  * @param {ParentNode | null | undefined} root
  * @param {(img: HTMLImageElement, src: string) => void} [onFallback]
  * @returns {Promise<void>}
@@ -58,7 +63,13 @@ export async function initDmSdkInRoot(root, onFallback) {
   try {
     const sdk = await loadDmSdk();
     if (typeof sdk.scanDom === 'function') {
-      sdk.scanDom(root);
+      // Only scan if there are unmanaged DM images in this subtree.
+      // This avoids a redundant scan when the page-level scanDom(main) already
+      // processed these images via the rAF in activateDmSdk().
+      const hasUnmanaged = root.querySelector?.('img[data-dm-src]:not([data-dm-managed])');
+      if (hasUnmanaged) {
+        sdk.scanDom(root);
+      }
     }
   } catch (error) {
     // eslint-disable-next-line no-console

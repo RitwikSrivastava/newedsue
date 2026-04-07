@@ -79,6 +79,12 @@ export default async function decorate(block) {
   img.alt = altText || '';
   img.dataset.dmSrc = url.toString();
   img.dataset.dmOrigin = url.origin;
+  // custom-image-one is always a full-width hero/banner — treat as LCP candidate.
+  // data-dm-priority tells the SDK to skip LQIP and set fetchpriority=high.
+  // The static fetchpriority and loading attributes work even before the SDK runs.
+  img.setAttribute('data-dm-priority', '');
+  img.setAttribute('fetchpriority', 'high');
+  img.loading = 'eager';
 
   block.append(img);
 
