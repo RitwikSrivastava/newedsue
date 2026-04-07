@@ -152,6 +152,7 @@ function isDMOpenAPIUrl(src) {
 function isScene7Url(src) {
   return /^(https?:\/\/(.*\.)?scene7\.com\/is\/image\/(.*))/i.test(src);
 }
+
 function parseDmSource(src) {
   try {
     const u = new URL(src, window.location.href);
@@ -175,6 +176,7 @@ function parseDmSource(src) {
   }
   return null;
 }
+
 /**
  * Build a DM SDK-managed <img> from a parsed DM source.
  * The first DM image on the page is marked as priority (likely the LCP hero):
@@ -198,6 +200,7 @@ function buildDmImg(parsed, altText, isPriority) {
   if (altText) img.alt = altText;
   return img;
 }
+
 /**
  * Converts Scene7 and DM Open API image sources to SDK-managed img elements.
  * Handles both anchor links (<a href="…scene7…">) and picture elements
@@ -210,16 +213,19 @@ function buildDmImg(parsed, altText, isPriority) {
 export function decorateExternalImages(main) {
   // Track whether we have seen the first DM image yet (priority/LCP candidate).
   let firstDmImage = true;
+
   // 1. Anchor links whose href points to a DM asset.
   main.querySelectorAll('a[href]').forEach((a) => {
     if (!isScene7Url(a.href) && !isDMOpenAPIUrl(a.href)) return;
     const parsed = parseDmSource(a.href);
     if (!parsed) return;
+
     const altText = a.innerText.trim();
     const img = buildDmImg(parsed, altText !== a.href ? altText : '', firstDmImage);
     firstDmImage = false;
     a.replaceWith(img);
   });
+
   // 2. Picture elements whose source srcset or fallback img.src points to a DM asset.
   main.querySelectorAll('picture').forEach((picture) => {
     // Prefer the first DM source candidate from <source srcset>.
@@ -238,14 +244,17 @@ export function decorateExternalImages(main) {
       if (isScene7Url(src) || isDMOpenAPIUrl(src)) dmSrc = src;
     }
     if (!dmSrc) return;
+
     const parsed = parseDmSource(dmSrc);
     if (!parsed) return;
+
     const innerAlt = picture.querySelector('img')?.alt || '';
     const img = buildDmImg(parsed, innerAlt, firstDmImage);
     firstDmImage = false;
     picture.replaceWith(img);
   });
 }
+
 async function activateDmSdk(root) {
   if (!root) return;
   try {
@@ -344,6 +353,7 @@ async function loadEager(doc) {
   if (main) {
     decorateMain(main);
     document.body.classList.add('appear');
+
     // Start the SDK import immediately and in parallel with section loading.
     //
     // Why: after decorateExternalImages() all DM images have data-dm-src but no src.
@@ -378,6 +388,7 @@ async function loadLazy(doc) {
   // (started automatically during SDK self-init) already catches img[data-dm-src] elements
   // added by lazy-loaded blocks. A second activation would fire up to two more scanDom
   // calls (rAF) against images that are already managed (data-dm-managed="true").
+
   const { hash } = window.location;
   const element = hash ? doc.getElementById(hash.substring(1)) : false;
   if (hash && element) element.scrollIntoView();
