@@ -18,6 +18,8 @@
       "fragment",
       "custom-asset-one",
       "custom-asset-one-required",
+      "dm-image",
+      "video",
       "quote",
       "icon-and-text-container",
       "image-and-text-container",
@@ -50,7 +52,8 @@
       "button",
       "title",
       "custom-asset-one",
-      "custom-asset-one-required"
+      "custom-asset-one-required",
+      "dm-image"
     ]
   },
   {
