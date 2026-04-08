@@ -215,7 +215,13 @@ export function decorateExternalImages(main) {
   let firstDmImage = true;
 
   // 1. Anchor links whose href points to a DM asset.
+  //    Skip anchors that are inside a .block element: those blocks have their own
+  //    decorate() + initDmSdkInRoot() that read the original <a href> via
+  //    getDmImageUrlFromRow(). Converting the anchor here first would cause the
+  //    SDK to fire a fetch for a doomed img (REQUEST #1), then the block creates
+  //    a second img and fires another fetch (REQUEST #2) — a double fetch.
   main.querySelectorAll('a[href]').forEach((a) => {
+    if (a.closest('.block')) return;
     if (!isScene7Url(a.href) && !isDMOpenAPIUrl(a.href)) return;
     const parsed = parseDmSource(a.href);
     if (!parsed) return;
@@ -432,11 +438,11 @@ async function loadLazy(doc) {
   // added by lazy-loaded blocks. A second activation would fire up to two more scanDom
   // calls (rAF) against images that are already managed (data-dm-managed="true").
 
-  // After lazy sections load, check if any new DM images landed in the viewport
-  // (e.g. image-and-text-container on mobile) that weren't promoted during loadEager
-  // because they didn't exist yet. This ensures the first visible lazy-section image
-  // gets fetchpriority=high and preconnects are fired for new origins.
-  promoteFirstBlockDmImage(main);
+  // Preconnect to any new DM origins that appeared in lazy-section images.
+  // This is a fast no-op if the origin was already preconnected.
+  main.querySelectorAll('img[data-dm-origin]').forEach((img) => {
+    if (img.dataset.dmOrigin) preconnectOrigin(img.dataset.dmOrigin);
+  });
 
   const { hash } = window.location;
   const element = hash ? doc.getElementById(hash.substring(1)) : false;
