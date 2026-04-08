@@ -704,6 +704,32 @@
     ]
   },
   {
+    "id": "video",
+    "fields": [
+      {
+        "component": "custom-asset-namespace:custom-asset",
+        "name": "thumbnail",
+        "label": "Thumbnail Image",
+        "description": "Select the thumbnail/poster image shown before video playback.",
+        "configUrl": "https://main--newedsue--RitwikSrivastava.aem.page/tools/asset-selector/image.config.json",
+        "valueType": "string"
+      },
+      {
+        "component": "custom-asset-namespace:custom-asset-mimetype",
+        "valueType": "string",
+        "name": "thumbnailMimeType"
+      },
+      {
+        "component": "text",
+        "name": "videoUrl",
+        "label": "DM Video URL",
+        "description": "Paste the Dynamic Media video delivery URL.",
+        "valueType": "string",
+        "value": ""
+      }
+    ]
+  },
+  {
     "id": "quote",
     "fields": [
        {
