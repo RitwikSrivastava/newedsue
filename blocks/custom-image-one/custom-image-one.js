@@ -85,11 +85,6 @@ export default async function decorate(block) {
   img.setAttribute('data-dm-priority', '');
   img.setAttribute('fetchpriority', 'high');
   img.loading = 'eager';
-  // Ensure the SDK measures the correct container width rather than falling back to
-  // 800px. getBoundingClientRect() returns 0 for imgs without an explicit CSS width
-  // at the time the SDK calls observe(). Setting width:100% here so clientWidth
-  // returns the block's width (~380px on mobile) before the SDK processes the img.
-  img.style.width = '100%';
 
   // Reserve layout space using the source image's aspect ratio on the CONTAINER,
   // not on the <img> itself. Setting width/height HTML attrs on the <img> confuses
