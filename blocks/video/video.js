@@ -1,3 +1,11 @@
+/**
+ * DM Open API video delivery:
+ * - `/play` is the Dynamic Media *video player* (HTML player UI). Embed with <iframe> and keep
+ *   the full URL + query string (autoplay, muted, customcss, languageselected, …).
+ * - Progressive files for native <video>: /adobe/assets/{assetId}/as/{name}.mp4 (or other direct URL).
+ * See Adobe Delivery APIs (video player vs web-optimized binary).
+ */
+
 function getFirstUrlFromText(text) {
   if (!text) return '';
   const match = text.match(/https?:\/\/[^\s<>"']+/i);
@@ -25,6 +33,51 @@ function getUrlFromRow(row) {
   return getFirstUrlFromText(row.textContent?.trim());
 }
 
+/**
+ * Prefer <picture><img> for poster — stable JPEG/PNG, not webp from first <source>.
+ * @param {Element | undefined} row
+ * @returns {string}
+ */
+function getPosterUrlFromRow(row) {
+  if (!row) return '';
+  const imgInPicture = row.querySelector('picture img[src]');
+  if (imgInPicture?.src) return imgInPicture.src;
+  return getUrlFromRow(row);
+}
+
+/**
+ * `/play` → iframe with full href (never strip query — player options live there).
+ * Direct media URLs → native <video>.
+ * @param {string} rawUrl
+ * @returns {{ href: string, mode: 'progressive' | 'iframe' }}
+ */
+function resolveDmVideoDelivery(rawUrl) {
+  try {
+    const u = new URL(rawUrl, window.location.href);
+    const path = u.pathname;
+
+    if (/\/play\/?$/i.test(path) || path.endsWith('/play')) {
+      return { href: u.href, mode: 'iframe' };
+    }
+
+    if (path.includes('/as/') && /\.(mp4|webm|ogg|ogv)(\?|$)/i.test(path)) {
+      u.searchParams.delete('wid');
+      u.searchParams.delete('dpr');
+      u.searchParams.delete('resMode');
+      u.searchParams.delete('sdk');
+      return { href: u.href, mode: 'progressive' };
+    }
+
+    if (/\.(mp4|webm|ogg|ogv)(\?|$)/i.test(path)) {
+      return { href: u.href, mode: 'progressive' };
+    }
+
+    return { href: rawUrl, mode: 'progressive' };
+  } catch (e) {
+    return { href: rawUrl, mode: 'progressive' };
+  }
+}
+
 function getMimeTypeFromUrl(url) {
   try {
     const pathname = new URL(url, window.location.href).pathname.toLowerCase();
@@ -32,17 +85,39 @@ function getMimeTypeFromUrl(url) {
     if (pathname.endsWith('.webm')) return 'video/webm';
     if (pathname.endsWith('.ogg') || pathname.endsWith('.ogv')) return 'video/ogg';
   } catch (e) {
-    // Ignore parse errors and let the browser infer type.
+    // Ignore
   }
   return '';
 }
 
 export default function decorate(block) {
   const rows = [...block.children];
-  const thumbnailUrl = getUrlFromRow(rows[0]);
-  const videoUrl = getUrlFromRow(rows[1]);
+  const thumbnailUrl = getPosterUrlFromRow(rows[0]);
+  const rawVideoUrl = getUrlFromRow(rows[1]);
 
-  if (!videoUrl) {
+  if (!rawVideoUrl) {
+    return;
+  }
+
+  const { href: videoHref, mode } = resolveDmVideoDelivery(rawVideoUrl);
+
+  block.textContent = '';
+
+  if (mode === 'iframe') {
+    const wrap = document.createElement('div');
+    wrap.className = 'video-iframe-wrap';
+    const iframe = document.createElement('iframe');
+    iframe.className = 'video-iframe';
+    iframe.src = videoHref;
+    iframe.title = 'Video';
+    iframe.setAttribute('loading', 'lazy');
+    iframe.setAttribute('allowfullscreen', '');
+    iframe.setAttribute(
+      'allow',
+      'accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture',
+    );
+    wrap.append(iframe);
+    block.append(wrap);
     return;
   }
 
@@ -57,17 +132,17 @@ export default function decorate(block) {
   }
 
   const source = document.createElement('source');
-  source.src = videoUrl;
-  const mimeType = getMimeTypeFromUrl(videoUrl);
+  source.src = videoHref;
+  const mimeType = getMimeTypeFromUrl(videoHref);
   if (mimeType) source.type = mimeType;
   video.append(source);
 
   const fallback = document.createElement('p');
   const fallbackLink = document.createElement('a');
-  fallbackLink.href = videoUrl;
+  fallbackLink.href = videoHref;
   fallbackLink.textContent = 'View video';
   fallback.append('Your browser does not support embedded videos. ', fallbackLink);
+  video.append(fallback);
 
-  block.textContent = '';
-  block.append(video, fallback);
+  block.append(video);
 }
