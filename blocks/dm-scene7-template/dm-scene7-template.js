@@ -1,5 +1,17 @@
 import { getDmImageUrlFromRow } from '../../scripts/utils/dm-sdk-loader.js';
 
+/**
+ * Scene7 template URL: pasted text (UE text field) or link from authored markup.
+ * @param {Element} block
+ * @param {Element | undefined} urlRow
+ * @returns {string}
+ */
+function getTemplateUrl(block, urlRow) {
+  const fromLink = getDmImageUrlFromRow(urlRow);
+  if (fromLink) return fromLink;
+  return getFieldText(block, 'image', urlRow)?.trim() || '';
+}
+
 function getFieldText(block, propName, positionalRow) {
   const ueRow = block.querySelector(`[data-aue-prop="${propName}"]`);
   if (ueRow) {
@@ -31,7 +43,7 @@ function isScene7IsImageUrl(href) {
 export default function decorate(block) {
   const rows = [...block.children];
   const urlRow = rows[0];
-  const templateUrl = getDmImageUrlFromRow(urlRow);
+  const templateUrl = getTemplateUrl(block, urlRow);
   const altText = getFieldText(block, 'imageAlt', rows[1]);
 
   if (!templateUrl || !isScene7IsImageUrl(templateUrl)) {
