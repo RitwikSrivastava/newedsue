@@ -19,6 +19,7 @@
       "custom-asset-one",
       "custom-asset-one-required",
       "dm-image",
+      "dm-scene7-template",
       "video",
       "quote",
       "icon-and-text-container",
@@ -53,7 +54,8 @@
       "title",
       "custom-asset-one",
       "custom-asset-one-required",
-      "dm-image"
+      "dm-image",
+      "dm-scene7-template"
     ]
   },
   {
