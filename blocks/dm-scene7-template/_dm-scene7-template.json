@@ -21,12 +21,12 @@
       "id": "dm-scene7-template",
       "fields": [
         {
-          "component": "custom-asset-namespace:custom-asset",
+          "component": "text",
           "name": "image",
           "label": "Scene7 template URL",
-          "description": "Paste or pick a Dynamic Media image template URL (is/image/…). Stored as a link for delivery; the page renders it as an image (Approach B, not mediabus).",
-          "configUrl": "https://main--newedsue--RitwikSrivastava.aem.page/tools/asset-selector/image.config.json",
-          "valueType": "string"
+          "description": "Paste the full Dynamic Media image template URL (…/is/image/…?…). Plain text field so you are not forced through the asset selector. Delivered as text or link (Approach B, not mediabus); the page renders it as an img.",
+          "valueType": "string",
+          "value": ""
         },
         {
           "component": "text",
