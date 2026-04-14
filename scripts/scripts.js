@@ -177,6 +177,17 @@ function parseDmSource(src) {
   return null;
 }
 
+/** Franklin block root for `dm-scene7-template` only — scopes decorateExternalImages skips. */
+const DM_SCENE7_TEMPLATE_BLOCK_SEL = 'div.dm-scene7-template';
+
+/**
+ * @param {Element | null} node
+ * @returns {boolean}
+ */
+function isUnderDmScene7TemplateBlock(node) {
+  return Boolean(node?.closest(DM_SCENE7_TEMPLATE_BLOCK_SEL));
+}
+
 /**
  * Build a DM SDK-managed <img> from a parsed DM source.
  * The first DM image on the page is marked as priority (likely the LCP hero):
@@ -208,6 +219,9 @@ function buildDmImg(parsed, altText, isPriority) {
  *
  * The DM delivery SDK (dm-sdk.mjs) handles adaptive URL construction, LQIP,
  * lazy loading, and resize upgrades via data-dm-src / data-dm-origin attributes.
+ *
+ * Scene7 / OpenAPI anchors inside `div.dm-scene7-template` are skipped so only that
+ * block handles them (Approach B). All other anchors are unchanged.
  * @param {Element} main
  */
 export function decorateExternalImages(main) {
@@ -216,6 +230,8 @@ export function decorateExternalImages(main) {
 
   // 1. Anchor links whose href points to a DM asset.
   main.querySelectorAll('a[href]').forEach((a) => {
+    // dm-scene7-template block only — keep anchor until that block's decorate() runs.
+    if (isUnderDmScene7TemplateBlock(a)) return;
     if (!isScene7Url(a.href) && !isDMOpenAPIUrl(a.href)) return;
     const parsed = parseDmSource(a.href);
     if (!parsed) return;
@@ -229,6 +245,7 @@ export function decorateExternalImages(main) {
 
   // 2. Picture elements whose source srcset or fallback img.src points to a DM asset.
   main.querySelectorAll('picture').forEach((picture) => {
+    if (isUnderDmScene7TemplateBlock(picture)) return;
     // Prefer the first DM source candidate from <source srcset>.
     let dmSrc = '';
     for (const source of picture.querySelectorAll('source')) {

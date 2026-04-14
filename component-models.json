@@ -704,6 +704,26 @@
     ]
   },
   {
+    "id": "dm-scene7-template",
+    "fields": [
+      {
+        "component": "custom-asset-namespace:custom-asset",
+        "name": "image",
+        "label": "Scene7 template URL",
+        "description": "Paste or pick a Dynamic Media image template URL (is/image/…). Stored as a link for delivery; the page renders it as an image (Approach B, not mediabus).",
+        "configUrl": "https://main--newedsue--RitwikSrivastava.aem.page/tools/asset-selector/image.config.json",
+        "valueType": "string"
+      },
+      {
+        "component": "text",
+        "valueType": "string",
+        "name": "imageAlt",
+        "label": "Alt",
+        "value": ""
+      }
+    ]
+  },
+  {
     "id": "video",
     "fields": [
       {
