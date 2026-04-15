@@ -1,5 +1,3 @@
-import { getDmImageUrlFromRow } from '../../scripts/utils/dm-sdk-loader.js';
-
 /**
  * Resolves the template URL without requiring host `scripts.js` changes.
  * Prefer the plain-text `image` field so `decorateExternalImages()` never strips
@@ -12,7 +10,20 @@ import { getDmImageUrlFromRow } from '../../scripts/utils/dm-sdk-loader.js';
 function getTemplateUrl(block, urlRow) {
   const pasted = getFieldText(block, 'image', urlRow)?.trim() || '';
   if (pasted) return pasted;
-  return getDmImageUrlFromRow(urlRow) || '';
+  return getUrlFromRow(urlRow) || '';
+}
+
+/**
+ * @param {Element | null | undefined} row
+ * @returns {string}
+ */
+function getUrlFromRow(row) {
+  if (!row) return '';
+  const anchor = row.querySelector('a[href]');
+  if (anchor?.href) return anchor.href;
+  const img = row.querySelector('img[src]');
+  if (img?.src) return img.src;
+  return row.textContent?.trim() || '';
 }
 
 function getFieldText(block, propName, positionalRow) {
