@@ -86,6 +86,14 @@ export default async function decorate(block) {
   img.setAttribute('fetchpriority', 'high');
   img.loading = 'eager';
 
+  // Copy intrinsic dimensions from the source picture/img so the browser can
+  // reserve space before the image loads, preventing CLS.
+  // The SDK's "aspect-ratio: auto" style only kicks in when width+height attrs exist.
+  const srcWidth = sourceImg?.getAttribute('width');
+  const srcHeight = sourceImg?.getAttribute('height');
+  if (srcWidth) img.setAttribute('width', srcWidth);
+  if (srcHeight) img.setAttribute('height', srcHeight);
+
   block.append(img);
 
   await initDmSdkInRoot(block, (imgEl, src) => {
