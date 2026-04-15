@@ -1,3 +1,6 @@
+import { buildDamUrl } from '../../scripts/utils/dam-open-apis.js';
+import { getDmImageUrlFromRow, initDmSdkInRoot } from '../../scripts/utils/dm-sdk-loader.js';
+import { isSvg } from '../../scripts/utils/dom.js';
 
 function getFieldText(block, propName, positionalRow) {
   const ueRow = block.querySelector(`[data-aue-prop="${propName}"]`);
@@ -5,46 +8,99 @@ function getFieldText(block, propName, positionalRow) {
   return positionalRow?.querySelector('div')?.textContent?.trim() || '';
 }
 
-
-function applyParamToPicture(picture, key, value) {
-  if (!picture || !value) return;
-
-  picture.querySelectorAll('source').forEach((source) => {
-    const url = new URL(source.srcset);
-    url.searchParams.set(key, value);
-    source.srcset = url.toString();
-  });
-
-  const img = picture.querySelector('img');
-  if (img) {
-    const url = new URL(img.src);
-    url.searchParams.set(key, value);
-    img.src = url.toString();
-  }
+/**
+ * Row that holds the custom-asset image. `custom-asset-one` has image first;
+ * `custom-asset-one-required` has `textAboveImage` first, then image.
+ * @param {HTMLElement} block
+ * @returns {Element | undefined}
+ */
+function getCustomAssetImageRow(block) {
+  const ueImage = block.querySelector('[data-aue-prop="image"]');
+  if (ueImage) return ueImage;
+  const rows = [...block.children];
+  const withUrl = rows.find((row) => getDmImageUrlFromRow(row));
+  return withUrl || rows[0];
 }
 
-export default function decorate(block) {
-  const [imageRow, , altRow, rotationRow, presetRow] = [...block.children];
+export default async function decorate(block) {
+  const rows = [...block.children];
+  const imageRow = getCustomAssetImageRow(block);
+  // After image: optional mimetype (custom-asset-one only), then alt, rotation, preset
+  const altRow = rows.find((r) => r.matches?.('[data-aue-prop="imageTitle"]'))
+    || rows[2];
+  const rotationRow = rows.find((r) => r.matches?.('[data-aue-prop="rotation"]'))
+    || rows[3];
+  const presetRow = rows.find((r) => r.matches?.('[data-aue-prop="preset"]'))
+    || rows[4];
 
-  const altText  = getFieldText(block, 'imageTitle', altRow);
+  const altText = getFieldText(block, 'imageTitle', altRow);
   const rotation = getFieldText(block, 'rotation', rotationRow);
-  const preset   = getFieldText(block, 'preset', presetRow);
+  const preset = getFieldText(block, 'preset', presetRow);
 
-  const picture = imageRow?.querySelector('picture');
-
-  if (!picture) return;
-
-  // Set alt text on the fallback <img>
-  const img = picture.querySelector('img');
-  if (img && altText) {
-    img.setAttribute('alt', altText);
+  const rawUrl = getDmImageUrlFromRow(imageRow);
+  if (!rawUrl) {
+    return;
   }
 
-  // Inject rotation and preset into every source URL (server-side DM transforms)
-  applyParamToPicture(picture, 'rotate', rotation);
-  applyParamToPicture(picture, 'preset', preset);
+  const sourceImg = imageRow?.querySelector('picture img, img');
 
-  // Clear the raw field rows and render only the picture
   block.textContent = '';
-  block.append(picture);
+
+  if (sourceImg && isSvg(sourceImg)) {
+    let href = rawUrl;
+    try {
+      href = buildDamUrl(rawUrl);
+    } catch (e) {
+      // keep rawUrl
+    }
+    const img = document.createElement('img');
+    img.src = href;
+    img.alt = altText || '';
+    img.loading = 'lazy';
+    block.append(img);
+    return;
+  }
+
+  let url;
+  try {
+    url = new URL(buildDamUrl(rawUrl), window.location.href);
+  } catch (e) {
+    url = new URL(rawUrl, window.location.href);
+  }
+
+  if (rotation) {
+    url.searchParams.set('rotate', rotation);
+  }
+  if (preset) {
+    url.searchParams.set('preset', preset);
+  }
+
+  const img = document.createElement('img');
+  img.alt = altText || '';
+  img.dataset.dmSrc = url.toString();
+  img.dataset.dmOrigin = url.origin;
+  // custom-image-one is always a full-width hero/banner — treat as LCP candidate.
+  // data-dm-priority tells the SDK to skip LQIP and set fetchpriority=high.
+  // The static fetchpriority and loading attributes work even before the SDK runs.
+  img.setAttribute('data-dm-priority', '');
+  img.setAttribute('fetchpriority', 'high');
+  img.loading = 'eager';
+
+  // Reserve layout space using the source image's aspect ratio on the CONTAINER,
+  // not on the <img> itself. Setting width/height HTML attrs on the <img> confuses
+  // the SDK's getBoundingClientRect() call (it may measure the HTML attr size before
+  // CSS applies), causing the SDK to request an oversized image and then fire the
+  // ResizeObserver for a second request. Putting aspect-ratio on the block element
+  // is safe — the SDK only manipulates the img's inline style, never the container.
+  const srcWidth = sourceImg?.getAttribute('width');
+  const srcHeight = sourceImg?.getAttribute('height');
+  if (srcWidth && srcHeight) {
+    block.style.aspectRatio = `${srcWidth} / ${srcHeight}`;
+  }
+
+  block.append(img);
+
+  await initDmSdkInRoot(block, (imgEl, src) => {
+    imgEl.src = src;
+  });
 }

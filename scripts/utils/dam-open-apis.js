@@ -30,7 +30,7 @@ function appendQantasImageVersion(url) {
 
 const MEDIA_FORMAT = '({widthType}-width: {width})';
 
-function buildDamUrl(imgSrc) {
+export function buildDamUrl(imgSrc) {
   if (!imgSrc) throw new TypeError('buildDamUrl: imgSrc is required');
   if (window.location.hostname === 'localhost') return imgSrc;
 

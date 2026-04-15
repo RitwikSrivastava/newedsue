@@ -11,9 +11,8 @@ import {
   loadSections,
   loadCSS,
 } from './aem.js';
-
+import { loadDmSdk } from './utils/dm-sdk-loader.js';
 const CONTENT_ROOT_PATH = '/content/Gazal-ue-site';
-
 /**
  * Helper function that converts an AEM path into an EDS path.
  */
@@ -21,16 +20,12 @@ export function getEDSLink(aemPath) {
   if (!aemPath) {
     return '';
   }
-
   let aemRoot = CONTENT_ROOT_PATH;
-
   if (window.hlx && window.hlx.aemRoot) {
     aemRoot = window.hlx.aemRoot;
   }
-
   return aemPath.replace(aemRoot, '').replace('.html', '');
 }
-
 /**
  * Gets path details from the current URL
  * @returns {object} Object containing path details
@@ -41,15 +36,12 @@ export function getPathDetails() {
   const ext = extParts.length > 1 ? extParts[extParts.length - 1] : '';
   const isContentPath = pathname.startsWith('/content');
   const parts = pathname.split('/').filter(Boolean);
-
   const safeLangGet = (index) => {
     const val = parts[index];
     return val ? val.split('.')[0].toLowerCase() : '';
   };
-
   let langRegion = 'en-au';
   const ISO_2_LETTER = /^[a-z]{2}$/;
-
   if (window.hlx && window.hlx.isExternalSite === true) {
     const hlxLangRegion = window.hlx.langregion?.toLowerCase();
     if (hlxLangRegion) {
@@ -75,10 +67,8 @@ export function getPathDetails() {
     }
     // Otherwise keep default 'en-au'
   }
-
   let [lang, region] = langRegion.split('-');
   const isLanguageMasters = langRegion === 'language-masters';
-
   // Safety checks
   if (!lang || lang === '' || lang === 'language') lang = 'en';
   if (!region || region === '' || region === 'masters') region = 'au';
@@ -87,10 +77,8 @@ export function getPathDetails() {
     lang = 'en';
     region = 'au';
   }
-
   const prefix = pathname.substring(0, pathname.indexOf(`/${langRegion}`)) || '';
   const suffix = pathname.substring(pathname.indexOf(`/${langRegion}`) + langRegion.length + 1) || '';
-
   return {
     ext,
     prefix,
@@ -102,7 +90,6 @@ export function getPathDetails() {
     isLanguageMasters,
   };
 }
-
 /**
  * Fetches language placeholders
  * @param {string} langRegion - Language region code
@@ -138,7 +125,6 @@ export async function fetchLanguagePlaceholders(langRegion) {
   }
   return {};
 }
-
 /**
  * Moves all the attributes from a given elmenet to another given element.
  * @param {Element} from the element to copy attributes from
@@ -157,106 +143,183 @@ export function moveAttributes(from, to, attributes) {
     }
   });
 }
-
 function isDMOpenAPIUrl(src) {
-  return /^(https?:\/\/(.*)\/adobe\/assets\/urn:aaid:aem:(.*))/gm.test(src);
+  // No `g` flag — regex literals with `g` are stateful objects shared across calls.
+  // Using `g` with .test() advances lastIndex after each match, causing alternating
+  // true/false results on repeated calls with the same URL.
+  return /^https?:\/\/.*\/adobe\/assets\/urn:aaid:aem:/i.test(src);
 }
-
 function isScene7Url(src) {
   return /^(https?:\/\/(.*\.)?scene7\.com\/is\/image\/(.*))/i.test(src);
 }
 
-export function decorateExternalImages(main) {
-  main.querySelectorAll('a[href]').forEach((a) => {
-    // Check if it's a Scene7 URL
-    if (isScene7Url(a.href)) {
-      // Simply convert anchor to img tag, preserving the Scene7 URL
-      const img = document.createElement('img');
-      img.loading = 'lazy';
-      img.src = a.href;
-      
-      // Set alt text from anchor text
-      if (a.href !== a.innerText) {
-        img.setAttribute('alt', a.innerText);
-      }
-      
-      a.replaceWith(img);
-    } else if (isDMOpenAPIUrl(a.href)) {
-      // Original DM Open API URL logic
-      const baseUrl = new URL(a.href);
-
-      // Check if URL contains 'test-page-v3-nocache' to toggle cache=off
-      const noCache = window.location.href.includes('test-page-v3-nocache');
-
-      const pic = document.createElement('picture');
-
-      // Source 1: WebP for mobile (750px width)
-      const source1 = document.createElement('source');
-      source1.type = 'image/webp';
-      const url1 = new URL(baseUrl);
-      url1.searchParams.set('width', '750');
-      url1.searchParams.set('format', 'webply');
-      if (noCache) {
-        url1.searchParams.set('cache', 'off');
-      }
-      source1.srcset = url1.toString();
-
-      // Source 3: JPEG for desktop (2000px width)
-      const source3 = document.createElement('source');
-      source3.type = 'image/jpeg';
-      source3.media = '(min-width: 600px)';
-      const url3 = new URL(baseUrl);
-      url3.searchParams.set('width', '2000');
-      url3.searchParams.set('format', 'jpg');
-      if (noCache) {
-        url3.searchParams.set('cache', 'off');
-      }
-      source3.srcset = url3.toString();
-
-      // Source 2: WebP for desktop (2000px width)
-      const source2 = document.createElement('source');
-      source2.type = 'image/webp';
-      source2.media = '(min-width: 600px)';
-      const url2 = new URL(baseUrl);
-      url2.searchParams.set('width', '2000');
-      url2.searchParams.set('format', 'webply');
-      if (noCache) {
-        url2.searchParams.set('cache', 'off');
-      }
-      source2.srcset = url2.toString();
-
-      // Fallback image: JPEG for mobile (750px width)
-      const img = document.createElement('img');
-      img.loading = 'lazy';
-      img.width = '1620';
-      img.height = '1080'; // You can adjust this based on your aspect ratio needs
-      const imgUrl = new URL(baseUrl);
-      imgUrl.searchParams.set('width', '750');
-      imgUrl.searchParams.set('format', 'jpg');
-      if (noCache) {
-        imgUrl.searchParams.set('cache', 'off');
-      }
-      img.src = imgUrl.toString();
-      if (a.href !== a.innerText) {
-        img.setAttribute('alt', a.innerText);
-      }
-
-      pic.appendChild(source3);
-      pic.appendChild(source2);
-      pic.appendChild(img);
-      pic.appendChild(source1);
-      a.replaceWith(pic);
+function parseDmSource(src) {
+  try {
+    const u = new URL(src, window.location.href);
+    const scene7Match = u.pathname.match(/\/is\/image\/(.+)/i);
+    if (scene7Match) {
+      return {
+        origin: u.origin,
+        asset: scene7Match[1],
+        sourceUrl: u.href,
+      };
     }
+    if (isDMOpenAPIUrl(src)) {
+      return {
+        origin: u.origin,
+        asset: u.pathname.replace(/^\/+/, ''),
+        sourceUrl: u.href,
+      };
+    }
+  } catch (e) {
+    // Ignore malformed URLs and skip conversion.
+  }
+  return null;
+}
+
+/**
+ * Build a DM SDK-managed <img> from a parsed DM source.
+ * The first DM image on the page is marked as priority (likely the LCP hero):
+ *   - data-dm-priority  → SDK injects <link rel="preload"> immediately and
+ *                         sets fetchpriority=high, skipping lazy loading.
+ *   - fetchpriority=high → browser honours high priority even before SDK runs.
+ * Every other image gets loading=lazy so off-screen images don't compete.
+ */
+function buildDmImg(parsed, altText, isPriority) {
+  const img = document.createElement('img');
+  img.dataset.dmSrc = parsed.asset;
+  img.dataset.dmOrigin = parsed.origin;
+  img.dataset.dmSourceUrl = parsed.sourceUrl;
+  if (isPriority) {
+    img.setAttribute('data-dm-priority', '');
+    img.setAttribute('data-dm-role', 'hero');
+    img.setAttribute('fetchpriority', 'high');
+  } else {
+    img.setAttribute('loading', 'lazy');
+  }
+  if (altText) img.alt = altText;
+  return img;
+}
+
+/**
+ * Converts Scene7 and DM Open API image sources to SDK-managed img elements.
+ * Handles both anchor links (<a href="…scene7…">) and picture elements
+ * (<picture><source srcset="…scene7…"></picture>).
+ *
+ * The DM delivery SDK (dm-sdk.mjs) handles adaptive URL construction, LQIP,
+ * lazy loading, and resize upgrades via data-dm-src / data-dm-origin attributes.
+ * @param {Element} main
+ */
+export function decorateExternalImages(main) {
+  // Track whether we have seen the first DM image yet (priority/LCP candidate).
+  let firstDmImage = true;
+
+  // 1. Anchor links whose href points to a DM asset.
+  main.querySelectorAll('a[href]').forEach((a) => {
+    if (!isScene7Url(a.href) && !isDMOpenAPIUrl(a.href)) return;
+    const parsed = parseDmSource(a.href);
+    if (!parsed) return;
+
+    preconnectOrigin(parsed.origin);
+    const altText = a.innerText.trim();
+    const img = buildDmImg(parsed, altText !== a.href ? altText : '', firstDmImage);
+    firstDmImage = false;
+    a.replaceWith(img);
+  });
+
+  // 2. Picture elements whose source srcset or fallback img.src points to a DM asset.
+  main.querySelectorAll('picture').forEach((picture) => {
+    // Prefer the first DM source candidate from <source srcset>.
+    let dmSrc = '';
+    for (const source of picture.querySelectorAll('source')) {
+      const candidate = (source.srcset || '').split(',')[0].trim().split(/\s+/)[0];
+      if (candidate && (isScene7Url(candidate) || isDMOpenAPIUrl(candidate))) {
+        dmSrc = candidate;
+        break;
+      }
+    }
+    // Fall back to the <img src> inside the picture.
+    if (!dmSrc) {
+      const innerImg = picture.querySelector('img');
+      const src = innerImg?.src || '';
+      if (isScene7Url(src) || isDMOpenAPIUrl(src)) dmSrc = src;
+    }
+    if (!dmSrc) return;
+
+    const parsed = parseDmSource(dmSrc);
+    if (!parsed) return;
+
+    preconnectOrigin(parsed.origin);
+    const innerAlt = picture.querySelector('img')?.alt || '';
+    const img = buildDmImg(parsed, innerAlt, firstDmImage);
+    firstDmImage = false;
+    picture.replaceWith(img);
   });
 }
 
+/**
+ * Inject a <link rel="preconnect"> to the given origin if one doesn't exist.
+ * Called before image requests begin so the DNS+TLS handshake can overlap
+ * with script evaluation rather than serialising after it.
+ */
+function preconnectOrigin(origin) {
+  if (!origin || document.querySelector(`link[rel="preconnect"][href="${origin}"]`)) return;
+  const link = document.createElement('link');
+  link.rel = 'preconnect';
+  link.href = origin;
+  link.crossOrigin = '';
+  document.head.appendChild(link);
+}
+
+/**
+ * After eager-section blocks have executed they may have produced img[data-dm-src]
+ * elements (e.g. custom-image-one) that were invisible to decorateExternalImages(),
+ * which runs before block JS. Scan for those and:
+ *   1. Preconnect to each unique DM origin.
+ *   2. Mark the very first untagged DM image as the LCP candidate so the SDK
+ *      treats it with fetchpriority=high and skips lazy loading / LQIP.
+ */
+function promoteFirstBlockDmImage(root) {
+  const alreadyHasPriority = root.querySelector('img[data-dm-priority]');
+  root.querySelectorAll('img[data-dm-src]').forEach((img) => {
+    const origin = img.dataset.dmOrigin;
+    if (origin) preconnectOrigin(origin);
+  });
+  if (alreadyHasPriority) return;
+  const first = root.querySelector('img[data-dm-src]:not([data-dm-priority]):not([data-dm-auto-priority])');
+  if (!first) return;
+  first.setAttribute('data-dm-priority', '');
+  first.setAttribute('fetchpriority', 'high');
+  first.removeAttribute('loading');
+}
+
+async function activateDmSdk(root) {
+  if (!root) return;
+  try {
+    const sdk = await loadDmSdk();
+    if (typeof sdk.scanDom === 'function') {
+      // One rAF is enough: the frame fires after layout, giving the SDK accurate
+      // container widths for dimension stamping and URL construction.
+      // The removed setTimeout(300) was a duplicate — the SDK marks images as
+      // data-dm-managed after the first scan so repeated calls are no-ops, but
+      // they still waste a timer slot and main-thread scheduling overhead.
+      requestAnimationFrame(() => sdk.scanDom(root));
+    }
+  } catch (err) {
+    // eslint-disable-next-line no-console
+    console.warn('[DM SDK] Failed to load for external images.', err);
+    root.querySelectorAll('img[data-dm-src]').forEach((img) => {
+      if (img.getAttribute('src')) return;
+      img.src = img.dataset.dmSourceUrl || img.dataset.dmSrc;
+    });
+  }
+}
 export function decorateImages(main) {
   main.querySelectorAll('p img').forEach((img) => {
     const p = img.closest('p');
     p.className = 'img-wrapper';
   });
 }
-
 // export function decorateImagesWithWidthHeight(main) {
 //   const urlSpec = window.location.href.endsWith('test-page');
 //   if (urlSpec) {
@@ -266,7 +329,6 @@ export function decorateImages(main) {
 //     });
 //   }
 // }
-
 /**
  * Move instrumentation attributes from a given element to another given element.
  * @param {Element} from the element to copy attributes from
@@ -281,7 +343,6 @@ export function moveInstrumentation(from, to) {
       .filter((attr) => attr.startsWith('data-aue-') || attr.startsWith('data-richtext-')),
   );
 }
-
 /**
  * load fonts.css and set a session storage flag
  */
@@ -293,7 +354,6 @@ async function loadFonts() {
     // do nothing
   }
 }
-
 /**
  * Builds all synthetic blocks in a container element.
  * @param {Element} main The container element
@@ -306,7 +366,6 @@ function buildAutoBlocks() {
     console.error('Auto Blocking failed', error);
   }
 }
-
 /**
  * Decorates the main element.
  * @param {Element} main The main element
@@ -317,13 +376,10 @@ export function decorateMain(main) {
   // decorateButtons(main); // Commented out - blocks handle their own button styling
   decorateIcons(main);
   decorateExternalImages(main);
-  // decorateImagesWithWidthHeight(main);
   buildAutoBlocks(main);
   decorateSections(main);
   decorateBlocks(main);
-  // decorateExternalImages(main);
 }
-
 /**
  * Loads everything needed to get to LCP.
  * @param {Element} doc The container element
@@ -335,9 +391,25 @@ async function loadEager(doc) {
   if (main) {
     decorateMain(main);
     document.body.classList.add('appear');
-    await loadSection(main.querySelector('.section'), waitForFirstImage);
-  }
 
+    // Start the SDK import immediately and in parallel with section loading.
+    //
+    // Why: after decorateExternalImages() all DM images have data-dm-src but no src.
+    // Images with no src report img.complete === true in all browsers, so
+    // waitForFirstImage() would resolve instantly — before the first image actually
+    // has a src to load. By firing activateDmSdk() without awaiting it first, the
+    // dynamic import of dm-sdk.mjs overlaps with loadSection(), giving the SDK the
+    // best possible chance to set el.src before waitForFirstImage() resolves and
+    // before the browser measures LCP.
+    const sdkReady = activateDmSdk(main);
+    await loadSection(main.querySelector('.section'), waitForFirstImage);
+    // Blocks (e.g. custom-image-one) create img[data-dm-src] elements during
+    // loadSection, AFTER decorateExternalImages() has already run. Promote the
+    // first such image to LCP priority so the SDK treats it with fetchpriority=high,
+    // and preconnect to every DM origin found so TCP/TLS overlaps with script work.
+    promoteFirstBlockDmImage(main);
+    await sdkReady;
+  }
   try {
     /* if desktop (proxy for fast connection) or fonts already loaded, load fonts.css */
     if (window.innerWidth >= 900 || sessionStorage.getItem('fonts-loaded')) {
@@ -347,27 +419,32 @@ async function loadEager(doc) {
     // do nothing
   }
 }
-
 /**
  * Loads everything that doesn't need to be delayed.
  * @param {Element} doc The container element
  */
 async function loadLazy(doc) {
   loadHeader(doc.querySelector('header'));
-
   const main = doc.querySelector('main');
   await loadSections(main);
+  // activateDmSdk is intentionally omitted here. The SDK's watchDom() MutationObserver
+  // (started automatically during SDK self-init) already catches img[data-dm-src] elements
+  // added by lazy-loaded blocks. A second activation would fire up to two more scanDom
+  // calls (rAF) against images that are already managed (data-dm-managed="true").
+
+  // After lazy sections load, check if any new DM images landed in the viewport
+  // (e.g. image-and-text-container on mobile) that weren't promoted during loadEager
+  // because they didn't exist yet. This ensures the first visible lazy-section image
+  // gets fetchpriority=high and preconnects are fired for new origins.
+  promoteFirstBlockDmImage(main);
 
   const { hash } = window.location;
   const element = hash ? doc.getElementById(hash.substring(1)) : false;
   if (hash && element) element.scrollIntoView();
-
   loadFooter(doc.querySelector('footer'));
-
   loadCSS(`${window.hlx.codeBasePath}/styles/lazy-styles.css`);
   loadFonts();
 }
-
 /**
  * Loads everything that happens a lot later,
  * without impacting the user experience.
@@ -377,13 +454,11 @@ function loadDelayed() {
   window.setTimeout(() => import('./delayed.js'), 3000);
   // load anything that can be postponed to the latest here
 }
-
 async function loadPage() {
   await loadEager(document);
   await loadLazy(document);
   loadDelayed();
 }
-
 // Initialize eds_config for widgets
 if (!window.eds_config) {
   window.eds_config = {
@@ -408,5 +483,4 @@ if (!window.eds_config) {
     }
   };
 }
-
 loadPage();

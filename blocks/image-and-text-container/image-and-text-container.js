@@ -3,8 +3,10 @@ import {
   getTextContent,
   createElementWithClasses,
   isFieldTrue,
+  isSvg,
 } from '../../scripts/utils/dom.js';
-import decorateDynamicMediaImage from '../../scripts/utils/dam-open-apis.js';
+import { buildDamUrl } from '../../scripts/utils/dam-open-apis.js';
+import { getDmImageUrlFromRow, initDmSdkInRoot } from '../../scripts/utils/dm-sdk-loader.js';
 import { EVENT_NAME, triggerBlockCardClick } from '../../scripts/martech/datalayer.js';
 import {
   attachTestId,
@@ -80,7 +82,7 @@ function attachTestIdToElements(block) {
     { selector: '.imagetext-content-container', elementName: 'content-container' },
     { selector: '.imagetext-badge', elementName: 'badge' },
     { selector: '.imagetext-image-container', elementName: 'image-container' },
-    { selector: '.imagetext-image-container picture', elementName: 'image' },
+    { selector: '.imagetext-image-container img', elementName: 'image' },
     { selector: '.imagetext-caption', elementName: 'caption' },
     { selector: '.imagetext-intro-text', elementName: 'intro' },
     { selector: '.imagetext-body-text', elementName: 'body' },
@@ -96,7 +98,21 @@ function attachTestIdToElements(block) {
 /*
  * Decorate Image and Text Item
  */
-async function decorateItem(parentBlock, block, layoutClass, classes = []) {
+/**
+ * Optional DM smart crop profile name from authoring (e.g. generic-3x2).
+ * @param {HTMLElement} block
+ * @param {Element | undefined} positionalRow
+ * @returns {string}
+ */
+function getImageAndTextSmartCrop(block, positionalRow) {
+  const ueCell = block.querySelector('[data-aue-prop="smartCrop"]');
+  if (ueCell) {
+    return getTextContent(ueCell);
+  }
+  return getTextContent(positionalRow);
+}
+
+async function decorateItem(parentBlock, block, classes = [], isFirst = false) {
   const [
     image,
     hideAltText,
@@ -108,16 +124,29 @@ async function decorateItem(parentBlock, block, layoutClass, classes = []) {
     bodyText,
     ctas,
     campaignCode,
+    smartCropRow,
   ] = block.children;
 
-  const smartCrops = classes.includes('highlighted')
-    ? { all: { crop: 'generic-4x5', layout: layoutClass } }
-    : { all: { crop: 'generic-3x2', layout: layoutClass } };
-
-  const pictureEl = decorateDynamicMediaImage(image, {
-    smartCrops,
+  const highlighted = classes.includes('highlighted');
+  const dmImgMarkup = buildImageAndTextDmMarkup(image, {
+    smartCropName: getImageAndTextSmartCrop(block, smartCropRow),
+    dmRole: highlighted ? 'hero' : 'content',
+    eager: highlighted,
+    // First item in the container is above the fold on mobile even when not
+    // highlighted — make it eager so the browser doesn't defer it with lazy loading.
+    eagerLoad: isFirst && !highlighted,
     excludeAltText: isFieldTrue(hideAltText),
   });
+
+  // Derive aspect ratio from the original picture/img for CLS prevention.
+  // We set it on the <figure> container, NOT on the <img> itself.
+  // Setting width/height HTML attrs on the <img> caused the SDK to measure the
+  // wrong element size (HTML attrs vs CSS width: 100%), triggering a double fetch.
+  // The figure's aspect-ratio is never touched by the SDK — safe to use here.
+  const sourceImgEl = image?.querySelector('img');
+  const srcW = sourceImgEl?.getAttribute('width');
+  const srcH = sourceImgEl?.getAttribute('height');
+  const figureAspectStyle = srcW && srcH ? ` style="aspect-ratio: ${srcW} / ${srcH}"` : '';
 
   // Apply extra classes to text elements
   const titleEle = title?.querySelector('h2, h3, h4');
@@ -206,10 +235,10 @@ async function decorateItem(parentBlock, block, layoutClass, classes = []) {
     </div>
   `;
 
-  const imageContainer = pictureEl ? `
-    <figure class="imagetext-image-container">
+  const imageContainer = dmImgMarkup ? `
+    <figure class="imagetext-image-container"${figureAspectStyle}>
       ${badgeHTML}
-      ${pictureEl.outerHTML}
+      ${dmImgMarkup}
       ${captionHTML}
     </figure>
   ` : '';
@@ -229,7 +258,6 @@ export default async function decorateContainer(block) {
 
   const imageAndTextItems = [];
   let numOfColumns = 1;
-  let layoutClass = null;
 
   // Get styles from single row items
   [...block.children].forEach((containerItem) => {
@@ -243,7 +271,6 @@ export default async function decorateContainer(block) {
         // Get the selected column option to check if it's stacked
         const layoutStyleMatch = textContent.match(/^layout-([0-9])-col$/);
         if (layoutStyleMatch) {
-          layoutClass = textContent;
           numOfColumns = parseInt(layoutStyleMatch[1], 10);
         }
       }
@@ -270,7 +297,7 @@ export default async function decorateContainer(block) {
         blockStyles,
       );
 
-      return decorateItem(block, imageAndTextItem, layoutClass, classes);
+      return decorateItem(block, imageAndTextItem, classes, index === 0);
     }),
   );
 
@@ -284,4 +311,91 @@ export default async function decorateContainer(block) {
 
   // testing requirement - set attribute 'data-testid' for elements
   attachTestIdToElements(block);
+
+  await initDmSdkInRoot(imageTextWrapper, (imgEl, src) => {
+    imgEl.src = src;
+  });
+}
+
+/**
+ * Escape text for use in double-quoted HTML attributes.
+ * @param {string | null | undefined} value
+ * @returns {string}
+ */
+function escapeHtmlAttr(value) {
+  return String(value ?? '')
+    .replace(/&/g, '&amp;')
+    .replace(/"/g, '&quot;')
+    .replace(/</g, '&lt;');
+}
+
+/**
+ * Build a DM SDK-managed img (or static SVG img) for image-and-text.
+ * @param {HTMLElement} imageCell
+ * @param {{ smartCropName?: string, dmRole: string, eager: boolean, excludeAltText: boolean }} options
+ * @returns {string} HTML snippet or empty string
+ */
+function buildImageAndTextDmMarkup(imageCell, options) {
+  const {
+    smartCropName = '',
+    dmRole,
+    eager,
+    eagerLoad,
+    excludeAltText,
+  } = options;
+
+  const rawUrl = getDmImageUrlFromRow(imageCell);
+  if (!rawUrl) {
+    return '';
+  }
+
+  const sourceImg = imageCell.querySelector('img');
+  const alt = excludeAltText ? '' : (sourceImg?.getAttribute('alt')?.trim() || '');
+
+  if (sourceImg && isSvg(sourceImg)) {
+    let href = rawUrl;
+    try {
+      href = buildDamUrl(rawUrl);
+    } catch (e) {
+      // keep rawUrl
+    }
+    return `<img class="imagetext-dm-image" src="${escapeHtmlAttr(href)}" alt="${escapeHtmlAttr(alt)}" loading="lazy" />`;
+  }
+
+  let imageUrl;
+  try {
+    imageUrl = buildDamUrl(rawUrl);
+  } catch (e) {
+    return '';
+  }
+
+  let dmSrc;
+  let origin;
+  try {
+    const u = new URL(imageUrl, window.location.href);
+    origin = u.origin;
+    dmSrc = u.toString();
+  } catch (e) {
+    return '';
+  }
+
+  const roleAttr = dmRole
+    ? ` data-dm-role="${escapeHtmlAttr(dmRole)}"`
+    : '';
+
+  const smartCropAttr = smartCropName.trim()
+    ? ` data-dm-smartcrop="${escapeHtmlAttr(smartCropName.trim())}"`
+    : '';
+
+  if (eager) {
+    return `<img class="imagetext-dm-image" alt="${escapeHtmlAttr(alt)}" data-dm-src="${escapeHtmlAttr(dmSrc)}" data-dm-origin="${escapeHtmlAttr(origin)}"${smartCropAttr}${roleAttr} data-dm-priority="" loading="eager" fetchpriority="high" />`;
+  }
+
+  // eagerLoad: first-item-in-container that isn't the hero — no priority signal,
+  // just remove lazy so the browser loads it without waiting for intersection.
+  if (eagerLoad) {
+    return `<img class="imagetext-dm-image" alt="${escapeHtmlAttr(alt)}" data-dm-src="${escapeHtmlAttr(dmSrc)}" data-dm-origin="${escapeHtmlAttr(origin)}"${smartCropAttr}${roleAttr} loading="eager" />`;
+  }
+
+  return `<img class="imagetext-dm-image" alt="${escapeHtmlAttr(alt)}" data-dm-src="${escapeHtmlAttr(dmSrc)}" data-dm-origin="${escapeHtmlAttr(origin)}"${smartCropAttr}${roleAttr} loading="lazy" />`;
 }
