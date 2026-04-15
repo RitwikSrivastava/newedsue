@@ -200,6 +200,11 @@
         "valueType": "string"
       },
       {
+        "component": "custom-asset-namespace:custom-asset-mimetype",
+        "valueType": "string",
+        "name": "imageMimeType"
+      },
+      {
         "component": "text",
         "name": "imageAlt",
         "label": "Alt Text",
@@ -347,6 +352,11 @@
         "label": "Image",
         "configUrl": "/content/dam/ritsriva-ue/config.json",
         "valueType": "string"
+      },
+      {
+        "component": "custom-asset-namespace:custom-asset-mimetype",
+        "valueType": "string",
+        "name": "imageMimeType"
       },
       {
         "component": "text",
@@ -629,112 +639,6 @@
         "name": "preset",
         "label": "Image Preset",
         "description": "Enter the Dynamic Media image preset name to apply (e.g. 'my-preset'). Leave empty to use default delivery.",
-        "valueType": "string",
-        "value": ""
-      }
-    ]
-  },
-  {
-    "id": "dm-image",
-    "fields": [
-      {
-        "component": "custom-asset-namespace:custom-asset",
-        "name": "image",
-        "label": "DM Image",
-        "description": "Select a Dynamic Media delivery URL via the custom asset picker.",
-        "configUrl": "https://main--newedsue--RitwikSrivastava.aem.page/tools/asset-selector/image.config.json",
-        "valueType": "string"
-      },
-      {
-        "component": "custom-asset-namespace:custom-asset-mimetype",
-        "valueType": "string",
-        "name": "imageMimeType"
-      },
-      {
-        "component": "text",
-        "valueType": "string",
-        "name": "imageAlt",
-        "label": "Alt",
-        "value": ""
-      },
-      {
-        "component": "text",
-        "valueType": "string",
-        "name": "origin",
-        "label": "DM Origin (optional)",
-        "value": ""
-      },
-      {
-        "component": "text",
-        "valueType": "string",
-        "name": "priority",
-        "label": "Priority (true/false)",
-        "value": ""
-      },
-      {
-        "component": "text",
-        "valueType": "string",
-        "name": "preset",
-        "label": "Preset (optional)",
-        "value": ""
-      },
-      {
-        "component": "text",
-        "valueType": "string",
-        "name": "smartCrop",
-        "label": "Smart Crop (optional)",
-        "value": ""
-      },
-      {
-        "component": "text",
-        "valueType": "string",
-        "name": "role",
-        "label": "Role (optional)",
-        "value": ""
-      }
-    ]
-  },
-  {
-    "id": "dm-scene7-template",
-    "fields": [
-      {
-        "component": "text",
-        "name": "image",
-        "label": "Scene7 template URL",
-        "description": "Paste the full Dynamic Media image template URL (…/is/image/…?…). Use this text field (not custom-asset) so host pages that run decorateExternalImages on Scene7 links do not replace the URL before this block runs. Approach B, not mediabus.",
-        "valueType": "string",
-        "value": ""
-      },
-      {
-        "component": "text",
-        "valueType": "string",
-        "name": "imageAlt",
-        "label": "Alt",
-        "value": ""
-      }
-    ]
-  },
-  {
-    "id": "video",
-    "fields": [
-      {
-        "component": "custom-asset-namespace:custom-asset",
-        "name": "thumbnail",
-        "label": "Thumbnail Image",
-        "description": "Select the thumbnail/poster image shown before video playback.",
-        "configUrl": "https://main--newedsue--RitwikSrivastava.aem.page/tools/asset-selector/image.config.json",
-        "valueType": "string"
-      },
-      {
-        "component": "custom-asset-namespace:custom-asset-mimetype",
-        "valueType": "string",
-        "name": "thumbnailMimeType"
-      },
-      {
-        "component": "text",
-        "name": "videoUrl",
-        "label": "DM Video URL",
-        "description": "Paste the Dynamic Media video delivery URL.",
         "valueType": "string",
         "value": ""
       }
