@@ -1,15 +1,18 @@
 import { getDmImageUrlFromRow } from '../../scripts/utils/dm-sdk-loader.js';
 
 /**
- * Scene7 template URL: pasted text (UE text field) or link from authored markup.
+ * Resolves the template URL without requiring host `scripts.js` changes.
+ * Prefer the plain-text `image` field so `decorateExternalImages()` never strips
+ * a Scene7 `<a>` before this block runs. Link fallback is for markup that does not
+ * run global anchor conversion.
  * @param {Element} block
  * @param {Element | undefined} urlRow
  * @returns {string}
  */
 function getTemplateUrl(block, urlRow) {
-  const fromLink = getDmImageUrlFromRow(urlRow);
-  if (fromLink) return fromLink;
-  return getFieldText(block, 'image', urlRow)?.trim() || '';
+  const pasted = getFieldText(block, 'image', urlRow)?.trim() || '';
+  if (pasted) return pasted;
+  return getDmImageUrlFromRow(urlRow) || '';
 }
 
 function getFieldText(block, propName, positionalRow) {

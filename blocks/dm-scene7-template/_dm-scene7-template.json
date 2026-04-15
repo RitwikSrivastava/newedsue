@@ -24,7 +24,7 @@
           "component": "text",
           "name": "image",
           "label": "Scene7 template URL",
-          "description": "Paste the full Dynamic Media image template URL (…/is/image/…?…). Plain text field so you are not forced through the asset selector. Delivered as text or link (Approach B, not mediabus); the page renders it as an img.",
+          "description": "Paste the full Dynamic Media image template URL (…/is/image/…?…). Use this text field (not custom-asset) so host pages that run decorateExternalImages on Scene7 links do not replace the URL before this block runs. Approach B, not mediabus.",
           "valueType": "string",
           "value": ""
         },
