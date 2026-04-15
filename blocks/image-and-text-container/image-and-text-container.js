@@ -138,6 +138,16 @@ async function decorateItem(parentBlock, block, classes = [], isFirst = false) {
     excludeAltText: isFieldTrue(hideAltText),
   });
 
+  // Derive aspect ratio from the original picture/img for CLS prevention.
+  // We set it on the <figure> container, NOT on the <img> itself.
+  // Setting width/height HTML attrs on the <img> caused the SDK to measure the
+  // wrong element size (HTML attrs vs CSS width: 100%), triggering a double fetch.
+  // The figure's aspect-ratio is never touched by the SDK — safe to use here.
+  const sourceImgEl = image?.querySelector('img');
+  const srcW = sourceImgEl?.getAttribute('width');
+  const srcH = sourceImgEl?.getAttribute('height');
+  const figureAspectStyle = srcW && srcH ? ` style="aspect-ratio: ${srcW} / ${srcH}"` : '';
+
   // Apply extra classes to text elements
   const titleEle = title?.querySelector('h2, h3, h4');
   if (titleEle) {
@@ -226,7 +236,7 @@ async function decorateItem(parentBlock, block, classes = [], isFirst = false) {
   `;
 
   const imageContainer = dmImgMarkup ? `
-    <figure class="imagetext-image-container">
+    <figure class="imagetext-image-container"${figureAspectStyle}>
       ${badgeHTML}
       ${dmImgMarkup}
       ${captionHTML}
@@ -377,24 +387,15 @@ function buildImageAndTextDmMarkup(imageCell, options) {
     ? ` data-dm-smartcrop="${escapeHtmlAttr(smartCropName.trim())}"`
     : '';
 
-  // Copy intrinsic dimensions from the original picture/img so the browser can
-  // reserve layout space before the image loads (prevents CLS).
-  // "aspect-ratio: auto" set by the SDK only works when width + height attrs exist.
-  const srcWidth = sourceImg?.getAttribute('width') || '';
-  const srcHeight = sourceImg?.getAttribute('height') || '';
-  const sizeAttrs = srcWidth && srcHeight
-    ? ` width="${escapeHtmlAttr(srcWidth)}" height="${escapeHtmlAttr(srcHeight)}"`
-    : '';
-
   if (eager) {
-    return `<img class="imagetext-dm-image" alt="${escapeHtmlAttr(alt)}" data-dm-src="${escapeHtmlAttr(dmSrc)}" data-dm-origin="${escapeHtmlAttr(origin)}"${sizeAttrs}${smartCropAttr}${roleAttr} data-dm-priority="" loading="eager" fetchpriority="high" />`;
+    return `<img class="imagetext-dm-image" alt="${escapeHtmlAttr(alt)}" data-dm-src="${escapeHtmlAttr(dmSrc)}" data-dm-origin="${escapeHtmlAttr(origin)}"${smartCropAttr}${roleAttr} data-dm-priority="" loading="eager" fetchpriority="high" />`;
   }
 
   // eagerLoad: first-item-in-container that isn't the hero — no priority signal,
   // just remove lazy so the browser loads it without waiting for intersection.
   if (eagerLoad) {
-    return `<img class="imagetext-dm-image" alt="${escapeHtmlAttr(alt)}" data-dm-src="${escapeHtmlAttr(dmSrc)}" data-dm-origin="${escapeHtmlAttr(origin)}"${sizeAttrs}${smartCropAttr}${roleAttr} loading="eager" />`;
+    return `<img class="imagetext-dm-image" alt="${escapeHtmlAttr(alt)}" data-dm-src="${escapeHtmlAttr(dmSrc)}" data-dm-origin="${escapeHtmlAttr(origin)}"${smartCropAttr}${roleAttr} loading="eager" />`;
   }
 
-  return `<img class="imagetext-dm-image" alt="${escapeHtmlAttr(alt)}" data-dm-src="${escapeHtmlAttr(dmSrc)}" data-dm-origin="${escapeHtmlAttr(origin)}"${sizeAttrs}${smartCropAttr}${roleAttr} loading="lazy" />`;
+  return `<img class="imagetext-dm-image" alt="${escapeHtmlAttr(alt)}" data-dm-src="${escapeHtmlAttr(dmSrc)}" data-dm-origin="${escapeHtmlAttr(origin)}"${smartCropAttr}${roleAttr} loading="lazy" />`;
 }

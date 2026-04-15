@@ -220,6 +220,7 @@ export function decorateExternalImages(main) {
     const parsed = parseDmSource(a.href);
     if (!parsed) return;
 
+    preconnectOrigin(parsed.origin);
     const altText = a.innerText.trim();
     const img = buildDmImg(parsed, altText !== a.href ? altText : '', firstDmImage);
     firstDmImage = false;
@@ -248,11 +249,48 @@ export function decorateExternalImages(main) {
     const parsed = parseDmSource(dmSrc);
     if (!parsed) return;
 
+    preconnectOrigin(parsed.origin);
     const innerAlt = picture.querySelector('img')?.alt || '';
     const img = buildDmImg(parsed, innerAlt, firstDmImage);
     firstDmImage = false;
     picture.replaceWith(img);
   });
+}
+
+/**
+ * Inject a <link rel="preconnect"> to the given origin if one doesn't exist.
+ * Called before image requests begin so the DNS+TLS handshake can overlap
+ * with script evaluation rather than serialising after it.
+ */
+function preconnectOrigin(origin) {
+  if (!origin || document.querySelector(`link[rel="preconnect"][href="${origin}"]`)) return;
+  const link = document.createElement('link');
+  link.rel = 'preconnect';
+  link.href = origin;
+  link.crossOrigin = '';
+  document.head.appendChild(link);
+}
+
+/**
+ * After eager-section blocks have executed they may have produced img[data-dm-src]
+ * elements (e.g. custom-image-one) that were invisible to decorateExternalImages(),
+ * which runs before block JS. Scan for those and:
+ *   1. Preconnect to each unique DM origin.
+ *   2. Mark the very first untagged DM image as the LCP candidate so the SDK
+ *      treats it with fetchpriority=high and skips lazy loading / LQIP.
+ */
+function promoteFirstBlockDmImage(root) {
+  const alreadyHasPriority = root.querySelector('img[data-dm-priority]');
+  root.querySelectorAll('img[data-dm-src]').forEach((img) => {
+    const origin = img.dataset.dmOrigin;
+    if (origin) preconnectOrigin(origin);
+  });
+  if (alreadyHasPriority) return;
+  const first = root.querySelector('img[data-dm-src]:not([data-dm-priority]):not([data-dm-auto-priority])');
+  if (!first) return;
+  first.setAttribute('data-dm-priority', '');
+  first.setAttribute('fetchpriority', 'high');
+  first.removeAttribute('loading');
 }
 
 async function activateDmSdk(root) {
@@ -365,6 +403,11 @@ async function loadEager(doc) {
     // before the browser measures LCP.
     const sdkReady = activateDmSdk(main);
     await loadSection(main.querySelector('.section'), waitForFirstImage);
+    // Blocks (e.g. custom-image-one) create img[data-dm-src] elements during
+    // loadSection, AFTER decorateExternalImages() has already run. Promote the
+    // first such image to LCP priority so the SDK treats it with fetchpriority=high,
+    // and preconnect to every DM origin found so TCP/TLS overlaps with script work.
+    promoteFirstBlockDmImage(main);
     await sdkReady;
   }
   try {
@@ -388,6 +431,12 @@ async function loadLazy(doc) {
   // (started automatically during SDK self-init) already catches img[data-dm-src] elements
   // added by lazy-loaded blocks. A second activation would fire up to two more scanDom
   // calls (rAF) against images that are already managed (data-dm-managed="true").
+
+  // After lazy sections load, check if any new DM images landed in the viewport
+  // (e.g. image-and-text-container on mobile) that weren't promoted during loadEager
+  // because they didn't exist yet. This ensures the first visible lazy-section image
+  // gets fetchpriority=high and preconnects are fired for new origins.
+  promoteFirstBlockDmImage(main);
 
   const { hash } = window.location;
   const element = hash ? doc.getElementById(hash.substring(1)) : false;
