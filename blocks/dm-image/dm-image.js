@@ -1,4 +1,6 @@
-import { getDmImageUrlFromRow, initDmSdkInRoot } from '../../scripts/utils/dm-sdk-loader.js';
+const DM_SDK_ESM_URL = '../../scripts/lib/dm-sdk.mjs';
+const DM_SDK_PROMISE_KEY = '__edsDmSdkLoader';
+const DM_SDK_WATCH_KEY = '__edsDmSdkWatching';
 
 function getFieldText(block, propName, positionalRow) {
   const ueRow = block.querySelector(`[data-aue-prop="${propName}"]`);
@@ -8,8 +10,33 @@ function getFieldText(block, propName, positionalRow) {
   return positionalRow?.querySelector('div')?.textContent?.trim() || '';
 }
 
+function getImageUrl(imageRow) {
+  if (!imageRow) {
+    return '';
+  }
+
+  const anchor = imageRow.querySelector('a[href]');
+  if (anchor?.href) {
+    return anchor.href;
+  }
+
+  const img = imageRow.querySelector('img[src]');
+  if (img?.src) {
+    return img.src;
+  }
+
+  return '';
+}
+
 function toBoolean(value) {
   return /^true$/i.test(value || '');
+}
+
+function loadDmSdk() {
+  if (!window[DM_SDK_PROMISE_KEY]) {
+    window[DM_SDK_PROMISE_KEY] = import(DM_SDK_ESM_URL);
+  }
+  return window[DM_SDK_PROMISE_KEY];
 }
 
 function applyOptionalDataset(img, name, value) {
@@ -28,7 +55,7 @@ export default async function decorate(block) {
   const preset = getFieldText(block, 'preset', rows[5]);
   const smartCrop = getFieldText(block, 'smartCrop', rows[6]);
   const role = getFieldText(block, 'role', rows[7]);
-  const imageUrl = getDmImageUrlFromRow(imageRow);
+  const imageUrl = getImageUrl(imageRow);
 
   if (!imageUrl) {
     return;
@@ -62,7 +89,19 @@ export default async function decorate(block) {
   block.textContent = '';
   block.append(img);
 
-  await initDmSdkInRoot(block, (imgEl, src) => {
-    imgEl.src = src;
-  });
+  try {
+    const sdk = await loadDmSdk();
+    if (typeof sdk?.scanDom === 'function') {
+      sdk.scanDom(block);
+    }
+    if (typeof sdk?.watchDom === 'function' && !window[DM_SDK_WATCH_KEY]) {
+      sdk.watchDom();
+      window[DM_SDK_WATCH_KEY] = true;
+    }
+  } catch (error) {
+    // Keep image visible when SDK is unavailable.
+    // eslint-disable-next-line no-console
+    console.warn('DM SDK not loaded. Falling back to static image URL.', error);
+    img.src = imageUrl;
+  }
 }
