@@ -112,7 +112,7 @@ function getImageAndTextSmartCrop(block, positionalRow) {
   return getTextContent(positionalRow);
 }
 
-async function decorateItem(parentBlock, block, classes = [], isFirst = false) {
+async function decorateItem(parentBlock, block, classes = []) {
   const [
     image,
     hideAltText,
@@ -132,9 +132,6 @@ async function decorateItem(parentBlock, block, classes = [], isFirst = false) {
     smartCropName: getImageAndTextSmartCrop(block, smartCropRow),
     dmRole: highlighted ? 'hero' : 'content',
     eager: highlighted,
-    // First item in the container is above the fold on mobile even when not
-    // highlighted — make it eager so the browser doesn't defer it with lazy loading.
-    eagerLoad: isFirst && !highlighted,
     excludeAltText: isFieldTrue(hideAltText),
   });
 
@@ -297,7 +294,7 @@ export default async function decorateContainer(block) {
         blockStyles,
       );
 
-      return decorateItem(block, imageAndTextItem, classes, index === 0);
+      return decorateItem(block, imageAndTextItem, classes);
     }),
   );
 
@@ -340,7 +337,6 @@ function buildImageAndTextDmMarkup(imageCell, options) {
     smartCropName = '',
     dmRole,
     eager,
-    eagerLoad,
     excludeAltText,
   } = options;
 
@@ -388,14 +384,16 @@ function buildImageAndTextDmMarkup(imageCell, options) {
     : '';
 
   if (eager) {
-    return `<img class="imagetext-dm-image" alt="${escapeHtmlAttr(alt)}" data-dm-src="${escapeHtmlAttr(dmSrc)}" data-dm-origin="${escapeHtmlAttr(origin)}"${smartCropAttr}${roleAttr} data-dm-priority="" loading="eager" fetchpriority="high" />`;
+    // Hero/highlighted image: load eagerly with explicit priority signal.
+    // style="width:100%" ensures the SDK measures the correct container width
+    // (via clientWidth) rather than falling back to the 800px hardcoded default
+    // when getBoundingClientRect() returns 0 before layout is complete.
+    return `<img class="imagetext-dm-image" style="width:100%" alt="${escapeHtmlAttr(alt)}" data-dm-src="${escapeHtmlAttr(dmSrc)}" data-dm-origin="${escapeHtmlAttr(origin)}"${smartCropAttr}${roleAttr} data-dm-priority="" loading="eager" fetchpriority="high" />`;
   }
 
-  // eagerLoad: first-item-in-container that isn't the hero — no priority signal,
-  // just remove lazy so the browser loads it without waiting for intersection.
-  if (eagerLoad) {
-    return `<img class="imagetext-dm-image" alt="${escapeHtmlAttr(alt)}" data-dm-src="${escapeHtmlAttr(dmSrc)}" data-dm-origin="${escapeHtmlAttr(origin)}"${smartCropAttr}${roleAttr} loading="eager" />`;
-  }
-
-  return `<img class="imagetext-dm-image" alt="${escapeHtmlAttr(alt)}" data-dm-src="${escapeHtmlAttr(dmSrc)}" data-dm-origin="${escapeHtmlAttr(origin)}"${smartCropAttr}${roleAttr} loading="lazy" />`;
+  // Non-hero images: keep lazy loading so the SDK's IntersectionObserver fires
+  // when the element enters the viewport with a fully-computed layout, giving the
+  // SDK an accurate width from getBoundingClientRect() instead of the 800px fallback.
+  // style="width:100%" further ensures clientWidth returns a real value as a backup.
+  return `<img class="imagetext-dm-image" style="width:100%" alt="${escapeHtmlAttr(alt)}" data-dm-src="${escapeHtmlAttr(dmSrc)}" data-dm-origin="${escapeHtmlAttr(origin)}"${smartCropAttr}${roleAttr} loading="lazy" />`;
 }
