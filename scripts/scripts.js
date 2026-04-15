@@ -11,6 +11,7 @@ import {
   loadSections,
   loadCSS,
 } from './aem.js';
+import { loadDmSdk } from './utils/dm-sdk-loader.js';
 
 const CONTENT_ROOT_PATH = '/content/Gazal-ue-site';
 
@@ -166,88 +167,45 @@ function isScene7Url(src) {
   return /^(https?:\/\/(.*\.)?scene7\.com\/is\/image\/(.*))/i.test(src);
 }
 
+/**
+ * Converts Scene7 and DM Open API image anchors to SDK-managed img elements.
+ * The DM delivery SDK (dm-sdk.mjs) handles adaptive URL construction, LQIP,
+ * lazy loading, and resize upgrades via data-dm-src / data-dm-origin attributes.
+ * @param {Element} main
+ */
 export function decorateExternalImages(main) {
+  const dmImages = [];
+
   main.querySelectorAll('a[href]').forEach((a) => {
-    // Check if it's a Scene7 URL
-    if (isScene7Url(a.href)) {
-      // Simply convert anchor to img tag, preserving the Scene7 URL
-      const img = document.createElement('img');
-      img.loading = 'lazy';
-      img.src = a.href;
-      
-      // Set alt text from anchor text
-      if (a.href !== a.innerText) {
-        img.setAttribute('alt', a.innerText);
-      }
-      
-      a.replaceWith(img);
-    } else if (isDMOpenAPIUrl(a.href)) {
-      // Original DM Open API URL logic
-      const baseUrl = new URL(a.href);
+    if (!isScene7Url(a.href) && !isDMOpenAPIUrl(a.href)) return;
 
-      // Check if URL contains 'test-page-v3-nocache' to toggle cache=off
-      const noCache = window.location.href.includes('test-page-v3-nocache');
+    const img = document.createElement('img');
+    img.dataset.dmSrc = a.href;
 
-      const pic = document.createElement('picture');
-
-      // Source 1: WebP for mobile (750px width)
-      const source1 = document.createElement('source');
-      source1.type = 'image/webp';
-      const url1 = new URL(baseUrl);
-      url1.searchParams.set('width', '750');
-      url1.searchParams.set('format', 'webply');
-      if (noCache) {
-        url1.searchParams.set('cache', 'off');
-      }
-      source1.srcset = url1.toString();
-
-      // Source 3: JPEG for desktop (2000px width)
-      const source3 = document.createElement('source');
-      source3.type = 'image/jpeg';
-      source3.media = '(min-width: 600px)';
-      const url3 = new URL(baseUrl);
-      url3.searchParams.set('width', '2000');
-      url3.searchParams.set('format', 'jpg');
-      if (noCache) {
-        url3.searchParams.set('cache', 'off');
-      }
-      source3.srcset = url3.toString();
-
-      // Source 2: WebP for desktop (2000px width)
-      const source2 = document.createElement('source');
-      source2.type = 'image/webp';
-      source2.media = '(min-width: 600px)';
-      const url2 = new URL(baseUrl);
-      url2.searchParams.set('width', '2000');
-      url2.searchParams.set('format', 'webply');
-      if (noCache) {
-        url2.searchParams.set('cache', 'off');
-      }
-      source2.srcset = url2.toString();
-
-      // Fallback image: JPEG for mobile (750px width)
-      const img = document.createElement('img');
-      img.loading = 'lazy';
-      img.width = '1620';
-      img.height = '1080'; // You can adjust this based on your aspect ratio needs
-      const imgUrl = new URL(baseUrl);
-      imgUrl.searchParams.set('width', '750');
-      imgUrl.searchParams.set('format', 'jpg');
-      if (noCache) {
-        imgUrl.searchParams.set('cache', 'off');
-      }
-      img.src = imgUrl.toString();
-      if (a.href !== a.innerText) {
-        img.setAttribute('alt', a.innerText);
-      }
-
-      pic.appendChild(source3);
-      pic.appendChild(source2);
-      pic.appendChild(img);
-      pic.appendChild(source1);
-      a.replaceWith(pic);
+    try {
+      img.dataset.dmOrigin = new URL(a.href).origin;
+    } catch (e) {
+      // ignore malformed URL
     }
+
+    const altText = a.innerText.trim();
+    if (altText && altText !== a.href) img.alt = altText;
+
+    a.replaceWith(img);
+    dmImages.push(img);
   });
+
+  if (dmImages.length > 0) {
+    // Kick off SDK load so its DOMContentLoaded / immediate scanDom runs.
+    // Falls back to static src if SDK fails to load.
+    loadDmSdk().catch((err) => {
+      // eslint-disable-next-line no-console
+      console.warn('[DM SDK] Failed to load for external images.', err);
+      dmImages.forEach((img) => {
+        img.src = img.dataset.dmSrc;
+      });
+    });
+  }
 }
 
 export function decorateImages(main) {
@@ -317,11 +275,9 @@ export function decorateMain(main) {
   // decorateButtons(main); // Commented out - blocks handle their own button styling
   decorateIcons(main);
   decorateExternalImages(main);
-  // decorateImagesWithWidthHeight(main);
   buildAutoBlocks(main);
   decorateSections(main);
   decorateBlocks(main);
-  // decorateExternalImages(main);
 }
 
 /**
