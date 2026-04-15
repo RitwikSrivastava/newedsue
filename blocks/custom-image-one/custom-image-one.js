@@ -8,8 +8,30 @@ function getFieldText(block, propName, positionalRow) {
   return positionalRow?.querySelector('div')?.textContent?.trim() || '';
 }
 
+/**
+ * Row that holds the custom-asset image. `custom-asset-one` has image first;
+ * `custom-asset-one-required` has `textAboveImage` first, then image.
+ * @param {HTMLElement} block
+ * @returns {Element | undefined}
+ */
+function getCustomAssetImageRow(block) {
+  const ueImage = block.querySelector('[data-aue-prop="image"]');
+  if (ueImage) return ueImage;
+  const rows = [...block.children];
+  const withUrl = rows.find((row) => getDmImageUrlFromRow(row));
+  return withUrl || rows[0];
+}
+
 export default async function decorate(block) {
-  const [imageRow, , altRow, rotationRow, presetRow] = [...block.children];
+  const rows = [...block.children];
+  const imageRow = getCustomAssetImageRow(block);
+  // After image: optional mimetype (custom-asset-one only), then alt, rotation, preset
+  const altRow = rows.find((r) => r.matches?.('[data-aue-prop="imageTitle"]'))
+    || rows[2];
+  const rotationRow = rows.find((r) => r.matches?.('[data-aue-prop="rotation"]'))
+    || rows[3];
+  const presetRow = rows.find((r) => r.matches?.('[data-aue-prop="preset"]'))
+    || rows[4];
 
   const altText = getFieldText(block, 'imageTitle', altRow);
   const rotation = getFieldText(block, 'rotation', rotationRow);
@@ -57,6 +79,12 @@ export default async function decorate(block) {
   img.alt = altText || '';
   img.dataset.dmSrc = url.toString();
   img.dataset.dmOrigin = url.origin;
+  // custom-image-one is always a full-width hero/banner — treat as LCP candidate.
+  // data-dm-priority tells the SDK to skip LQIP and set fetchpriority=high.
+  // The static fetchpriority and loading attributes work even before the SDK runs.
+  img.setAttribute('data-dm-priority', '');
+  img.setAttribute('fetchpriority', 'high');
+  img.loading = 'eager';
 
   block.append(img);
 
