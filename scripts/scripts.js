@@ -12,9 +12,7 @@ import {
   loadCSS,
 } from './aem.js';
 import { loadDmSdk } from './utils/dm-sdk-loader.js';
-
 const CONTENT_ROOT_PATH = '/content/Gazal-ue-site';
-
 /**
  * Helper function that converts an AEM path into an EDS path.
  */
@@ -22,16 +20,12 @@ export function getEDSLink(aemPath) {
   if (!aemPath) {
     return '';
   }
-
   let aemRoot = CONTENT_ROOT_PATH;
-
   if (window.hlx && window.hlx.aemRoot) {
     aemRoot = window.hlx.aemRoot;
   }
-
   return aemPath.replace(aemRoot, '').replace('.html', '');
 }
-
 /**
  * Gets path details from the current URL
  * @returns {object} Object containing path details
@@ -42,15 +36,12 @@ export function getPathDetails() {
   const ext = extParts.length > 1 ? extParts[extParts.length - 1] : '';
   const isContentPath = pathname.startsWith('/content');
   const parts = pathname.split('/').filter(Boolean);
-
   const safeLangGet = (index) => {
     const val = parts[index];
     return val ? val.split('.')[0].toLowerCase() : '';
   };
-
   let langRegion = 'en-au';
   const ISO_2_LETTER = /^[a-z]{2}$/;
-
   if (window.hlx && window.hlx.isExternalSite === true) {
     const hlxLangRegion = window.hlx.langregion?.toLowerCase();
     if (hlxLangRegion) {
@@ -76,10 +67,8 @@ export function getPathDetails() {
     }
     // Otherwise keep default 'en-au'
   }
-
   let [lang, region] = langRegion.split('-');
   const isLanguageMasters = langRegion === 'language-masters';
-
   // Safety checks
   if (!lang || lang === '' || lang === 'language') lang = 'en';
   if (!region || region === '' || region === 'masters') region = 'au';
@@ -88,10 +77,8 @@ export function getPathDetails() {
     lang = 'en';
     region = 'au';
   }
-
   const prefix = pathname.substring(0, pathname.indexOf(`/${langRegion}`)) || '';
   const suffix = pathname.substring(pathname.indexOf(`/${langRegion}`) + langRegion.length + 1) || '';
-
   return {
     ext,
     prefix,
@@ -103,7 +90,6 @@ export function getPathDetails() {
     isLanguageMasters,
   };
 }
-
 /**
  * Fetches language placeholders
  * @param {string} langRegion - Language region code
@@ -139,7 +125,6 @@ export async function fetchLanguagePlaceholders(langRegion) {
   }
   return {};
 }
-
 /**
  * Moves all the attributes from a given elmenet to another given element.
  * @param {Element} from the element to copy attributes from
@@ -158,63 +143,136 @@ export function moveAttributes(from, to, attributes) {
     }
   });
 }
-
 function isDMOpenAPIUrl(src) {
-  return /^(https?:\/\/(.*)\/adobe\/assets\/urn:aaid:aem:(.*))/gm.test(src);
+  // No `g` flag — regex literals with `g` are stateful objects shared across calls.
+  // Using `g` with .test() advances lastIndex after each match, causing alternating
+  // true/false results on repeated calls with the same URL.
+  return /^https?:\/\/.*\/adobe\/assets\/urn:aaid:aem:/i.test(src);
 }
-
 function isScene7Url(src) {
   return /^(https?:\/\/(.*\.)?scene7\.com\/is\/image\/(.*))/i.test(src);
 }
-
+function parseDmSource(src) {
+  try {
+    const u = new URL(src, window.location.href);
+    const scene7Match = u.pathname.match(/\/is\/image\/(.+)/i);
+    if (scene7Match) {
+      return {
+        origin: u.origin,
+        asset: scene7Match[1],
+        sourceUrl: u.href,
+      };
+    }
+    if (isDMOpenAPIUrl(src)) {
+      return {
+        origin: u.origin,
+        asset: u.pathname.replace(/^\/+/, ''),
+        sourceUrl: u.href,
+      };
+    }
+  } catch (e) {
+    // Ignore malformed URLs and skip conversion.
+  }
+  return null;
+}
 /**
- * Converts Scene7 and DM Open API image anchors to SDK-managed img elements.
+ * Build a DM SDK-managed <img> from a parsed DM source.
+ * The first DM image on the page is marked as priority (likely the LCP hero):
+ *   - data-dm-priority  → SDK injects <link rel="preload"> immediately and
+ *                         sets fetchpriority=high, skipping lazy loading.
+ *   - fetchpriority=high → browser honours high priority even before SDK runs.
+ * Every other image gets loading=lazy so off-screen images don't compete.
+ */
+function buildDmImg(parsed, altText, isPriority) {
+  const img = document.createElement('img');
+  img.dataset.dmSrc = parsed.asset;
+  img.dataset.dmOrigin = parsed.origin;
+  img.dataset.dmSourceUrl = parsed.sourceUrl;
+  if (isPriority) {
+    img.setAttribute('data-dm-priority', '');
+    img.setAttribute('data-dm-role', 'hero');
+    img.setAttribute('fetchpriority', 'high');
+  } else {
+    img.setAttribute('loading', 'lazy');
+  }
+  if (altText) img.alt = altText;
+  return img;
+}
+/**
+ * Converts Scene7 and DM Open API image sources to SDK-managed img elements.
+ * Handles both anchor links (<a href="…scene7…">) and picture elements
+ * (<picture><source srcset="…scene7…"></picture>).
+ *
  * The DM delivery SDK (dm-sdk.mjs) handles adaptive URL construction, LQIP,
  * lazy loading, and resize upgrades via data-dm-src / data-dm-origin attributes.
  * @param {Element} main
  */
 export function decorateExternalImages(main) {
-  const dmImages = [];
-
+  // Track whether we have seen the first DM image yet (priority/LCP candidate).
+  let firstDmImage = true;
+  // 1. Anchor links whose href points to a DM asset.
   main.querySelectorAll('a[href]').forEach((a) => {
     if (!isScene7Url(a.href) && !isDMOpenAPIUrl(a.href)) return;
-
-    const img = document.createElement('img');
-    img.dataset.dmSrc = a.href;
-
-    try {
-      img.dataset.dmOrigin = new URL(a.href).origin;
-    } catch (e) {
-      // ignore malformed URL
-    }
-
+    const parsed = parseDmSource(a.href);
+    if (!parsed) return;
     const altText = a.innerText.trim();
-    if (altText && altText !== a.href) img.alt = altText;
-
+    const img = buildDmImg(parsed, altText !== a.href ? altText : '', firstDmImage);
+    firstDmImage = false;
     a.replaceWith(img);
-    dmImages.push(img);
   });
-
-  if (dmImages.length > 0) {
-    // Kick off SDK load so its DOMContentLoaded / immediate scanDom runs.
-    // Falls back to static src if SDK fails to load.
-    loadDmSdk().catch((err) => {
-      // eslint-disable-next-line no-console
-      console.warn('[DM SDK] Failed to load for external images.', err);
-      dmImages.forEach((img) => {
-        img.src = img.dataset.dmSrc;
-      });
+  // 2. Picture elements whose source srcset or fallback img.src points to a DM asset.
+  main.querySelectorAll('picture').forEach((picture) => {
+    // Prefer the first DM source candidate from <source srcset>.
+    let dmSrc = '';
+    for (const source of picture.querySelectorAll('source')) {
+      const candidate = (source.srcset || '').split(',')[0].trim().split(/\s+/)[0];
+      if (candidate && (isScene7Url(candidate) || isDMOpenAPIUrl(candidate))) {
+        dmSrc = candidate;
+        break;
+      }
+    }
+    // Fall back to the <img src> inside the picture.
+    if (!dmSrc) {
+      const innerImg = picture.querySelector('img');
+      const src = innerImg?.src || '';
+      if (isScene7Url(src) || isDMOpenAPIUrl(src)) dmSrc = src;
+    }
+    if (!dmSrc) return;
+    const parsed = parseDmSource(dmSrc);
+    if (!parsed) return;
+    const innerAlt = picture.querySelector('img')?.alt || '';
+    const img = buildDmImg(parsed, innerAlt, firstDmImage);
+    firstDmImage = false;
+    picture.replaceWith(img);
+  });
+}
+async function activateDmSdk(root) {
+  if (!root) return;
+  try {
+    const sdk = await loadDmSdk();
+    if (typeof sdk.scanDom === 'function') {
+      // One rAF is enough: the frame fires after layout, giving the SDK accurate
+      // container widths for dimension stamping and URL construction.
+      // The removed setTimeout(300) was a duplicate — the SDK marks images as
+      // data-dm-managed after the first scan so repeated calls are no-ops, but
+      // they still waste a timer slot and main-thread scheduling overhead.
+      requestAnimationFrame(() => sdk.scanDom(root));
+    }
+  } catch (err) {
+    // eslint-disable-next-line no-console
+    console.warn('[DM SDK] Failed to load for external images.', err);
+    root.querySelectorAll('img[data-dm-src]').forEach((img) => {
+      if (img.getAttribute('src')) return;
+      img.src = img.dataset.dmSourceUrl || img.dataset.dmSrc;
     });
   }
 }
-
 export function decorateImages(main) {
   main.querySelectorAll('p img').forEach((img) => {
     const p = img.closest('p');
     p.className = 'img-wrapper';
   });
 }
-
 // export function decorateImagesWithWidthHeight(main) {
 //   const urlSpec = window.location.href.endsWith('test-page');
 //   if (urlSpec) {
@@ -224,7 +282,6 @@ export function decorateImages(main) {
 //     });
 //   }
 // }
-
 /**
  * Move instrumentation attributes from a given element to another given element.
  * @param {Element} from the element to copy attributes from
@@ -239,7 +296,6 @@ export function moveInstrumentation(from, to) {
       .filter((attr) => attr.startsWith('data-aue-') || attr.startsWith('data-richtext-')),
   );
 }
-
 /**
  * load fonts.css and set a session storage flag
  */
@@ -251,7 +307,6 @@ async function loadFonts() {
     // do nothing
   }
 }
-
 /**
  * Builds all synthetic blocks in a container element.
  * @param {Element} main The container element
@@ -264,7 +319,6 @@ function buildAutoBlocks() {
     console.error('Auto Blocking failed', error);
   }
 }
-
 /**
  * Decorates the main element.
  * @param {Element} main The main element
@@ -279,7 +333,6 @@ export function decorateMain(main) {
   decorateSections(main);
   decorateBlocks(main);
 }
-
 /**
  * Loads everything needed to get to LCP.
  * @param {Element} doc The container element
@@ -291,9 +344,19 @@ async function loadEager(doc) {
   if (main) {
     decorateMain(main);
     document.body.classList.add('appear');
+    // Start the SDK import immediately and in parallel with section loading.
+    //
+    // Why: after decorateExternalImages() all DM images have data-dm-src but no src.
+    // Images with no src report img.complete === true in all browsers, so
+    // waitForFirstImage() would resolve instantly — before the first image actually
+    // has a src to load. By firing activateDmSdk() without awaiting it first, the
+    // dynamic import of dm-sdk.mjs overlaps with loadSection(), giving the SDK the
+    // best possible chance to set el.src before waitForFirstImage() resolves and
+    // before the browser measures LCP.
+    const sdkReady = activateDmSdk(main);
     await loadSection(main.querySelector('.section'), waitForFirstImage);
+    await sdkReady;
   }
-
   try {
     /* if desktop (proxy for fast connection) or fonts already loaded, load fonts.css */
     if (window.innerWidth >= 900 || sessionStorage.getItem('fonts-loaded')) {
@@ -303,27 +366,25 @@ async function loadEager(doc) {
     // do nothing
   }
 }
-
 /**
  * Loads everything that doesn't need to be delayed.
  * @param {Element} doc The container element
  */
 async function loadLazy(doc) {
   loadHeader(doc.querySelector('header'));
-
   const main = doc.querySelector('main');
   await loadSections(main);
-
+  // activateDmSdk is intentionally omitted here. The SDK's watchDom() MutationObserver
+  // (started automatically during SDK self-init) already catches img[data-dm-src] elements
+  // added by lazy-loaded blocks. A second activation would fire up to two more scanDom
+  // calls (rAF) against images that are already managed (data-dm-managed="true").
   const { hash } = window.location;
   const element = hash ? doc.getElementById(hash.substring(1)) : false;
   if (hash && element) element.scrollIntoView();
-
   loadFooter(doc.querySelector('footer'));
-
   loadCSS(`${window.hlx.codeBasePath}/styles/lazy-styles.css`);
   loadFonts();
 }
-
 /**
  * Loads everything that happens a lot later,
  * without impacting the user experience.
@@ -333,13 +394,11 @@ function loadDelayed() {
   window.setTimeout(() => import('./delayed.js'), 3000);
   // load anything that can be postponed to the latest here
 }
-
 async function loadPage() {
   await loadEager(document);
   await loadLazy(document);
   loadDelayed();
 }
-
 // Initialize eds_config for widgets
 if (!window.eds_config) {
   window.eds_config = {
@@ -364,5 +423,4 @@ if (!window.eds_config) {
     }
   };
 }
-
 loadPage();
